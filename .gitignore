@@ -25,3 +25,10 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+/.idea
+/src/script.ahk
+/src/application_specific_bindings.py
+/src/autohotkey-menu-generator-enchansements.txt
+/src/autohotkey-menu-generator.txt
+/script.ahk

@@ -1,0 +1,21 @@
+autohotkey-script-generator
+
+Python script for easy generating autohotkey scripts with popup menus and more.
+
+Usage:
+python.exe create-ahk-script.py
+call script.ahk
+
+Features usage:
+
+import ahkutils as ahk
+builder = ahk.ScriptBuilder()
+
+builder.addAutoCompleteTime("date", "yyyy-MM-dd") #type 'date' and press [Tab] to get current date
+builder.addAutoCompleteTime("time", "hh:mm:sstt") #type 'time' and press [Tab] to  get current time
+builder.addAutoComplete("git cp", "git cherry-pick") #git cp' and press [Tab] to get 'git cherry-pick'
+builder.hotKeyPrintText("3", "http://localhost:8080/app/") #Press [Win]+3 to get 'http://localhost:8080/app/'
+
+builder.generateScript() #After that file script.ahk  is created
+
+#For menu example see generateGitShortcutsMenu() code
