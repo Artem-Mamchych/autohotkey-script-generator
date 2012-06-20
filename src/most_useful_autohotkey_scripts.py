@@ -3,12 +3,6 @@ import ahkutils as ahk
 class AutoComplete(object):
     scriptBuilder = None
 
-    def __init__(self, builder):
-        if isinstance(builder, ahk.ScriptBuilder):
-            self.scriptBuilder = builder
-        else:
-            raise "Can't create Menu instance! ScriptBuilder is null!"
-
     def insertMavenAliases(self):
         self.scriptBuilder.addAutoComplete("m dep", "mvn clean deploy -U -Dmaven.test.skip=true -DskipTests -Dshould.deploy.to.TEST=true")
         self.scriptBuilder.addAutoComplete("m cl", "mvn -o clean")
@@ -29,31 +23,43 @@ class AutoComplete(object):
         self.scriptBuilder.endIfApplication_AutoComplete()
 
     def insertCommonGitAliases(self):
-        self.scriptBuilder.addAutoComplete("git st", "git status")
-        self.scriptBuilder.addAutoComplete("git co", "git checkout ")
-        self.scriptBuilder.addAutoComplete("git ma", "git checkout master")
-        self.scriptBuilder.addAutoComplete("git st", "git checkout 12.06.5")
-        self.scriptBuilder.addAutoComplete("git fe", "git fetch --all")
+        self.scriptBuilder.addAutoCompleteSmart("git pull")
+        self.scriptBuilder.addAutoCompleteSmart("git status")
+        self.scriptBuilder.addAutoCompleteSmart("git stash save")
+        self.scriptBuilder.addAutoCompleteSmart("git stash pop")
+        self.scriptBuilder.addAutoCompleteSmart("git stash list")
+        self.scriptBuilder.addAutoCompleteSmart("git checkout")
+        self.scriptBuilder.addAutoCompleteSmart("git checkout master")
+        self.scriptBuilder.addAutoCompleteSmart("git rebase")
+        self.scriptBuilder.addAutoCompleteSmart("git rebase master")
+        self.scriptBuilder.addAutoComplete("git rbc", "git rebase --continue")
+        self.scriptBuilder.addAutoComplete("git rbs", "git rebase --skip")
+        self.scriptBuilder.addAutoCompleteSmart("git checkout 12.07.0")
+        self.scriptBuilder.addAutoCompleteSmart("git fetch --all")
         self.scriptBuilder.addAutoComplete("git ci", "git commit ")
-        self.scriptBuilder.addAutoComplete("git br", "git branch ")
+        self.scriptBuilder.addAutoCompleteSmart("git branch")
         self.scriptBuilder.addAutoComplete("git rs", "git reset --hard HEAD")
         self.scriptBuilder.addAutoComplete("git ad", "git add --interactive") #provides a menu for adding, updating, reverting, and more
 
         self.scriptBuilder.addAutoComplete("git cp", "git cherry-pick ")
-        self.scriptBuilder.addAutoComplete("git fix", "git commit --amend -C HEAD") #git fix FILE1 FILE2;
-        self.scriptBuilder.addAutoComplete("git rb", "git rebase ")
-        self.scriptBuilder.addAutoComplete("git rbc", "git rebase --continue")
-        self.scriptBuilder.addAutoComplete("git rbs", "git rebase --skip")
+        self.scriptBuilder.addAutoComplete("git fix", "git commit --amend -C HEAD") #git fix FILE1 FILE2;        
         self.scriptBuilder.addAutoComplete("git un", "git git reset --soft HEAD~1")
         self.scriptBuilder.addAutoComplete("git ren", "git branch -m old new")
         self.scriptBuilder.addAutoComplete("git l", "git log --graph --abbrev-commit --date=relative")
         self.scriptBuilder.addAutoComplete("git dif", "git log -p")
 
-        self.scriptBuilder.addAutoComplete("git pop", "git stash pop")
+    def insertLinuxShellAliases(self):
+        self.scriptBuilder.addAutoComplete("diskfree", "du -s ./* | sort -nr| cut -f 2-|xargs -i du -sh {}")
 
     def insertCurrentDate_Time(self):
         self.scriptBuilder.addAutoCompleteTime("1date", "yyyy-MM-dd")
         self.scriptBuilder.addAutoCompleteTime("1time", "hh:mm:sstt")
+
+    def __init__(self, builder):
+        if isinstance(builder, ahk.ScriptBuilder):
+            self.scriptBuilder = builder
+        else:
+            raise "Can't create Menu instance! ScriptBuilder is null!"
 
 class CommonScripts(object):
     scriptBuilder = None

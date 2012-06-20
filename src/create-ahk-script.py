@@ -3,8 +3,8 @@ import sys
 import os.path
 import ahkutils as ahk
 
-description='main automation script for easy generating autohotkey menus and more'
-version = 0.3
+description='main automation script for easy generating autohotkey menus, hotkey bindings, text autocomplete and more'
+version = 0.4
 
 def generate():
     print("Generating AHK Script...")

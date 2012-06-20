@@ -13,12 +13,14 @@ class ScriptBuilder(object):
     handlers = None
     menu_key_bindings = None
     key_bindings = None
+    abbreviations = None
 
     def __init__(self, scriptName=None):
         self.menu_tree = list()
         self.handlers = list()
         self.menu_key_bindings = list()
         self.key_bindings = list()
+        self.abbreviations = list()
 
     def getFileInstance(self):
         return self.ahk_file
@@ -31,6 +33,15 @@ class ScriptBuilder(object):
 
     def endIfApplication_AutoComplete(self):
         self.key_bindings.append("#IfWinActive")
+
+    def addAutoCompleteSmart(self, text, ret=True):
+        name = abbreviate(text)
+        if name not in self.abbreviations:
+            self.abbreviations.append(name)
+            print(name + " for " + text + "\tAutoCompleteSmart was added!")
+            self.addAutoComplete(name, text)
+        else:
+            print("FATAL! " + text + "\tAutoCompleteSmart was not added")
 
     #To use autocomplete - type 'shortcut' text and press [Tab]
     def addAutoComplete(self, shortcut, text, ret=True):
@@ -50,7 +61,7 @@ class ScriptBuilder(object):
 
     def hotKeyPrintText(self, key, text, pressEnter=False):
         #TODO check text for empty srt
-        print("Adding PrintText hotKey on Win+%s button" % key)
+#        print("Adding PrintText hotKey on Win+%s button" % key)
         self.key_bindings.append("\n#%s::" % key)
         self.key_bindings.append("SetKeyDelay 0")
         self.key_bindings.append("SendRaw "+ text)
@@ -61,6 +72,7 @@ class ScriptBuilder(object):
     def generateScript(self):
         print("Writing script file...")
         self.addCommonHandlers()
+        self.enablePasteInWindowsPrompt()
 
         for text in self.menu_tree: #1. Write menu structure declarations:
             self.write(text)
@@ -103,6 +115,16 @@ class ScriptBuilder(object):
 OpenInBrowserMenuHandler:
 Run %A_ThisMenuItem%
 return""")
+
+    #Enable Ctrl+V for Pasting in the Windows Command Prompt
+    def enablePasteInWindowsPrompt(self):
+        self.key_bindings.append("""
+#IfWinActive ahk_class ConsoleWindowClass
+^V::
+SendInput {Raw}%clipboard%
+return
+#IfWinActive
+""")
 
 def checkName(text):
     if "," in text:
@@ -172,6 +194,14 @@ class Menu(object):
     def createHandlerId(self):
         self.handlerId += 1
         return self.name + 'Handler' + str(self.handlerId)
+
+def abbreviate(text): #returns first letter of each word
+    lines = text.split(" ")
+    name = ""
+    for i in lines:
+        if i and len(i) >= 1:
+            name += i[0]
+    return name
 
 #Paste text from clipboard
 def pasteTextCode():
