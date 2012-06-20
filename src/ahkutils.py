@@ -1,10 +1,40 @@
 #autohotkey utils
+import os
+import sys
 
 def sendCopy():
     return "Send, ^{vk43} ; Ctrl+C"
 
 def sendPaste():
     return "Send, ^{vk56} ; Ctrl+V"
+
+#Some applications has poor i/o performance and this delay helps them to get all uncorrupted text data.
+#Delay will be added only when input text is too long.
+def setKeyDelay(text=0):
+    if len(text) < 25:
+        return "SetKeyDelay 0"
+    else:
+        return """
+SetKeyDelay 0
+#IfWinActive ahk_class Console_2_Main
+SetKeyDelay 1
+#IfWinActive"""
+
+#Reads and returns content of file
+def includeFile(path):
+    if not os.path.exists(path):
+        print("File " + path + " not exists!")
+        sys.exit()
+
+    lines = ""
+    file = open(path)
+    while 1:
+        lines_list = file.readlines(100000)
+        if not lines_list:
+            break
+        for line in lines_list:
+            lines += line
+    return lines
 
 #Root object with base methods to build ahk script
 class ScriptBuilder(object):
@@ -45,7 +75,9 @@ class ScriptBuilder(object):
 
     #To use autocomplete - type 'shortcut' text and press [Tab]
     def addAutoComplete(self, shortcut, text, ret=True):
-        self.key_bindings.append("\n::" + shortcut + "::\nSendInput " + text)
+        self.key_bindings.append("\n::" + shortcut + "::")
+        self.key_bindings.append(setKeyDelay(text))
+        self.key_bindings.append("SendRaw " + text)
         if ret:
             self.key_bindings.append("Return")
 
@@ -63,7 +95,7 @@ class ScriptBuilder(object):
         #TODO check text for empty srt
 #        print("Adding PrintText hotKey on Win+%s button" % key)
         self.key_bindings.append("\n#%s::" % key)
-        self.key_bindings.append("SetKeyDelay 0")
+        self.key_bindings.append(setKeyDelay(text))
         self.key_bindings.append("SendRaw "+ text)
         if pressEnter:
             self.key_bindings.append("Send {enter}")
@@ -97,7 +129,7 @@ class ScriptBuilder(object):
     #Simulates text typing
     #TODO printTextHandler has issue with losing focus of input, so it is not suitable for popup menus
     def printTextHandler(self, text, pressEnter=False):
-        self.handlers.append("SetKeyDelay 0")
+        self.handlers.append(setKeyDelay(text))
         self.handlers.append("SendRaw "+ text)
         if pressEnter:
             self.handlers.append("Send {enter}")

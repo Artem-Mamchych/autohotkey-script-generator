@@ -15,8 +15,10 @@ def generate():
     if os.path.exists("most_useful_autohotkey_scripts.py"):
         import most_useful_autohotkey_scripts as commons
         top_scripts = commons.CommonScripts(builder)
-        if len(sys.argv) >= 2 and sys.argv[1] == '--invert-wheel':
+        if '--invert-wheel' in sys.argv:
             top_scripts.invertMouseScrollWheel()
+        if '--quake-shell' in sys.argv:
+            top_scripts.addQuakeStyleShell()
         top_scripts.googleTextFromAnyApp('#w')
         top_scripts.googleTranslateSelectedText('#t')
 

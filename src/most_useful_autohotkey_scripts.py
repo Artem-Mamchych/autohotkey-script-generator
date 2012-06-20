@@ -24,6 +24,7 @@ class AutoComplete(object):
 
     def insertCommonGitAliases(self):
         self.scriptBuilder.addAutoCompleteSmart("git pull")
+        self.scriptBuilder.addAutoComplete("gpu", "git pull -v --progress upstream")
         self.scriptBuilder.addAutoCompleteSmart("git status")
         self.scriptBuilder.addAutoCompleteSmart("git stash save")
         self.scriptBuilder.addAutoCompleteSmart("git stash pop")
@@ -40,13 +41,13 @@ class AutoComplete(object):
         self.scriptBuilder.addAutoCompleteSmart("git branch")
         self.scriptBuilder.addAutoComplete("git rs", "git reset --hard HEAD")
         self.scriptBuilder.addAutoComplete("git ad", "git add --interactive") #provides a menu for adding, updating, reverting, and more
+        self.scriptBuilder.addAutoComplete("gl", "git log --graph --abbrev-commit --date=relative")
+        self.scriptBuilder.addAutoComplete("glp", "git log -p")
 
         self.scriptBuilder.addAutoComplete("git cp", "git cherry-pick ")
         self.scriptBuilder.addAutoComplete("git fix", "git commit --amend -C HEAD") #git fix FILE1 FILE2;        
         self.scriptBuilder.addAutoComplete("git un", "git git reset --soft HEAD~1")
         self.scriptBuilder.addAutoComplete("git ren", "git branch -m old new")
-        self.scriptBuilder.addAutoComplete("git l", "git log --graph --abbrev-commit --date=relative")
-        self.scriptBuilder.addAutoComplete("git dif", "git log -p")
 
     def insertLinuxShellAliases(self):
         self.scriptBuilder.addAutoComplete("diskfree", "du -s ./* | sort -nr| cut -f 2-|xargs -i du -sh {}")
@@ -71,6 +72,7 @@ class CommonScripts(object):
             raise "Can't create Menu instance! ScriptBuilder is null!"
 
     def invertMouseScrollWheel(self):
+        print("Mouse wheel scrolling is inverted! (MacOs style)")
         self.scriptBuilder.bindKey("WheelUp", "Send {WheelDown}")
         self.scriptBuilder.bindKey("WheelDown", "Send {WheelUp}")
 
@@ -119,6 +121,12 @@ StringReplace, Clipboard, Clipboard, `r`n, `%0A, All
 Run % "http://translate.google.com/#auto|uk|" . clipboard ; uriEncode(clipboard)
 Clipboard := MyClip
 """)
+
+#It requires installing of additional software.
+#See: http://tech.xster.net/tips/quake-style-drop-down-terminal-for-windows/
+    def addQuakeStyleShell(self):
+        print("Quake style shell support based on Console2 is added. Hotkey is: [Ctrl]+[`]")
+        self.scriptBuilder.key_bindings.append(ahk.includeFile("includes/QuakeTerminal.ahk"))
 
     def htmlEditCommons(self):
 #        self.scriptBuilder.bindKey("^sc030", "Send, ^{sc02E}<b>^{sc02F}</b>", ret=False) #Wrap text example

@@ -1,0 +1,20 @@
+source: http://tech.xster.net/tips/quake-style-drop-down-terminal-for-windows/
+
+Follow these steps to get it working:
+
+1 Download Console and put it somewhere (ie. C:\Program Files\Console2\)
+2 Make sure it’s in your %path% system environment (Right-click My Computer, Properties, Advanced system settings, Advanced, Environment Variables)
+3 Run it, go to Edit -> Settings. Change the settings to suit your taste
+	Change your shell to PowerShell at C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe for Windows 7 and change your startup dir
+	Change the window size columns to take up most of your screen
+	Windows fonts suck, try Andale Mono or Monaco
+	Make sure initial position is at 0, 0 and always on top
+	Under Appearance -> More…, make sure it has no menu, no toolbar, no caption, not resizable, no border, no taskbar, no tray icon for minimal footprint
+	Set your transparency
+4 Download AutoHotkey and install it
+5 Call top_scripts.addQuakeStyleShell() in create-ahk-script.py. After that QuakeTerminal.ahk will be included and shell open/close hotkwy will be Ctrl-`
+6 Run the script and press your hotkey
+7 Boom, you got a terminal at your fingertip
+
+http://sourceforge.net/projects/console/
+http://www.autohotkey.com/
