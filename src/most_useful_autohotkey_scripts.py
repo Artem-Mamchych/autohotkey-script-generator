@@ -2,6 +2,8 @@ import ahkutils as ahk
 
 class AutoComplete(object):
     scriptBuilder = None
+    user_branches = None
+    user_remotes = None
 
     def insertMavenAliases(self):
         self.scriptBuilder.addAutoComplete("m dep", "mvn clean deploy -U -Dmaven.test.skip=true -DskipTests -Dshould.deploy.to.TEST=true")
@@ -30,24 +32,39 @@ class AutoComplete(object):
         self.scriptBuilder.addAutoCompleteSmart("git stash pop")
         self.scriptBuilder.addAutoCompleteSmart("git stash list")
         self.scriptBuilder.addAutoCompleteSmart("git checkout")
-        self.scriptBuilder.addAutoCompleteSmart("git checkout master")
         self.scriptBuilder.addAutoCompleteSmart("git rebase")
-        self.scriptBuilder.addAutoCompleteSmart("git rebase master")
-        self.scriptBuilder.addAutoComplete("git rbc", "git rebase --continue")
-        self.scriptBuilder.addAutoComplete("git rbs", "git rebase --skip")
-        self.scriptBuilder.addAutoCompleteSmart("git checkout 12.07.0")
-        self.scriptBuilder.addAutoCompleteSmart("git fetch --all")
+        self.scriptBuilder.addAutoCompleteSmart("git rebase --continue")
+        self.scriptBuilder.addAutoCompleteSmart("git rebase --skip")
         self.scriptBuilder.addAutoComplete("git ci", "git commit ")
         self.scriptBuilder.addAutoCompleteSmart("git branch")
-        self.scriptBuilder.addAutoComplete("git rs", "git reset --hard HEAD")
-        self.scriptBuilder.addAutoComplete("git ad", "git add --interactive") #provides a menu for adding, updating, reverting, and more
+        self.scriptBuilder.addAutoCompleteSmart("git reset --hard HEAD")
+        self.scriptBuilder.addAutoCompleteSmart("git add --interactive") #provides a menu for adding, updating, reverting, and more
         self.scriptBuilder.addAutoComplete("gl", "git log --graph --abbrev-commit --date=relative")
-        self.scriptBuilder.addAutoComplete("glp", "git log -p")
+        self.scriptBuilder.addAutoCompleteSmart("git log -p")
 
         self.scriptBuilder.addAutoComplete("git cp", "git cherry-pick ")
-        self.scriptBuilder.addAutoComplete("git fix", "git commit --amend -C HEAD") #git fix FILE1 FILE2;        
-        self.scriptBuilder.addAutoComplete("git un", "git git reset --soft HEAD~1")
+        self.scriptBuilder.addAutoComplete("git fix", "git commit --amend -C HEAD") #git fix FILE1 FILE2;
         self.scriptBuilder.addAutoComplete("git ren", "git branch -m old new")
+        self.scriptBuilder.addAutoCompleteSmart("git reset --soft HEAD~1")
+        self.addGitAliasesSpecificForUserBranches()
+
+    def addGitAliasesSpecificForUserBranches(self):
+        if not self.user_remotes:
+            self.user_remotes='origin'
+        if not self.user_branches:
+            self.user_branches = list()
+        if 'master' not in self.user_branches:
+            self.user_branches.append('master')
+
+        for branch in self.user_branches:
+            self.scriptBuilder.addAutoCompleteSmart("git checkout %s" % branch)
+            self.scriptBuilder.addAutoCompleteSmart("git rebase %s" % branch)
+        for remote in self.user_remotes:
+            self.scriptBuilder.addAutoCompleteSmart("git remote add %s url" % remote)
+            self.scriptBuilder.addAutoCompleteSmart("git fetch %s" % remote)
+            for branch in self.user_branches:
+                self.scriptBuilder.addAutoCompleteSmart("git push --progress %s %s:%s" % (remote, branch, branch))
+                self.scriptBuilder.addAutoCompleteSmart("git push --progress %s %s:%s --force " % (remote, branch, branch))
 
     def insertLinuxShellAliases(self):
         self.scriptBuilder.addAutoComplete("diskfree", "du -s ./* | sort -nr| cut -f 2-|xargs -i du -sh {}")
@@ -56,11 +73,13 @@ class AutoComplete(object):
         self.scriptBuilder.addAutoCompleteTime("1date", "yyyy-MM-dd")
         self.scriptBuilder.addAutoCompleteTime("1time", "hh:mm:sstt")
 
-    def __init__(self, builder):
+    def __init__(self, builder, user_branches=None, user_remotes=None):
         if isinstance(builder, ahk.ScriptBuilder):
             self.scriptBuilder = builder
         else:
-            raise "Can't create Menu instance! ScriptBuilder is null!"
+            ahk.error("Can't create Menu instance! ScriptBuilder is null!")
+        self.user_branches = user_branches
+        self.user_remotes = user_remotes
 
 class CommonScripts(object):
     scriptBuilder = None
@@ -69,7 +88,7 @@ class CommonScripts(object):
         if isinstance(builder, ahk.ScriptBuilder):
             self.scriptBuilder = builder
         else:
-            raise "Can't create Menu instance! ScriptBuilder is null!"
+            ahk.error("Can't create Menu instance! ScriptBuilder is null!")
 
     def invertMouseScrollWheel(self):
         print("Mouse wheel scrolling is inverted! (MacOs style)")

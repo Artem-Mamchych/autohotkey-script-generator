@@ -4,7 +4,9 @@ import os.path
 import ahkutils as ahk
 
 description='main automation script for easy generating autohotkey menus, hotkey bindings, text autocomplete and more'
-version = 0.4
+version = 0.5
+user_branches = list()
+user_remotes = list()
 
 def generate():
     print("Generating AHK Script...")
@@ -15,14 +17,14 @@ def generate():
     if os.path.exists("most_useful_autohotkey_scripts.py"):
         import most_useful_autohotkey_scripts as commons
         top_scripts = commons.CommonScripts(builder)
-        if '--invert-wheel' in sys.argv:
+        if getCliArgument('--invert-wheel'):
             top_scripts.invertMouseScrollWheel()
-        if '--quake-shell' in sys.argv:
+        if getCliArgument('--quake-shell'):
             top_scripts.addQuakeStyleShell()
         top_scripts.googleTextFromAnyApp('#w')
         top_scripts.googleTranslateSelectedText('#t')
 
-        autocompl = commons.AutoComplete(builder)
+        autocompl = commons.AutoComplete(builder, user_branches, user_remotes)
         autocompl.insertCurrentDate_Time()
         autocompl.insertCommonGitAliases()
         autocompl.insertMavenAliases()
@@ -57,5 +59,24 @@ def generateGitShortcutsMenu(builder):
     git.addPrintText("run tests/deploy to mvn", "mvn -U clean deploy -Dshould.deploy.to.TEST=false")
     git.assignMenuHotKey()
 
+def getCliArgument(name):
+    if '=' not in name:
+        if name in sys.argv:
+            return True
+        else:
+            return False
+    else:
+        output = ""
+        #Return list of param=values, [...,]
+        for arg in sys.argv:
+            if arg.startswith(name):
+                if arg.replace(name,''):
+                    output = arg.replace(name,'').split(',')
+                break
+        return output
+
 if __name__ == "__main__":
+    #List type (--branches=master,develop,experimental) command line arguments are fetched here
+    user_branches = getCliArgument('--branches=')
+    user_remotes = getCliArgument('--remotes=')
     generate()

@@ -1,5 +1,7 @@
 #autohotkey utils
 import os
+from sets import Set
+allowed_chars = Set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ')
 import sys
 
 def sendCopy():
@@ -10,14 +12,13 @@ def sendPaste():
 
 #Some applications has poor i/o performance and this delay helps them to get all uncorrupted text data.
 #Delay will be added only when input text is too long.
-def setKeyDelay(text=0):
-    if len(text) < 25:
-        return "SetKeyDelay 0"
-    else:
-        return """
-SetKeyDelay 0
+def setKeyDelay(text=""):
+    return """
 #IfWinActive ahk_class Console_2_Main
 SetKeyDelay 1
+#IfWinActive
+#IfWinNotActive ahk_class Console_2_Main
+SetKeyDelay 0
 #IfWinActive"""
 
 #Reads and returns content of file
@@ -64,19 +65,22 @@ class ScriptBuilder(object):
     def endIfApplication_AutoComplete(self):
         self.key_bindings.append("#IfWinActive")
 
-    def addAutoCompleteSmart(self, text, ret=True):
+    def addAutoCompleteSmart(self, text, ret=True, delay=True):
         name = abbreviate(text)
         if name not in self.abbreviations:
             self.abbreviations.append(name)
             print(name + " for " + text + "\tAutoCompleteSmart was added!")
-            self.addAutoComplete(name, text)
+            self.addAutoComplete(name, text, ret=True, delay=delay)
         else:
-            print("FATAL! " + text + "\tAutoCompleteSmart was not added")
+            print("FATAL! " + text + "\tAutoCompleteSmart WAS NOT ADDED")
 
     #To use autocomplete - type 'shortcut' text and press [Tab]
-    def addAutoComplete(self, shortcut, text, ret=True):
+    def addAutoComplete(self, shortcut, text, ret=True, delay=True):
         self.key_bindings.append("\n::" + shortcut + "::")
-        self.key_bindings.append(setKeyDelay(text))
+        if delay:
+            self.key_bindings.append(setKeyDelay(text))
+        else:
+            self.key_bindings.append(setKeyDelay())
         self.key_bindings.append("SendRaw " + text)
         if ret:
             self.key_bindings.append("Return")
@@ -160,7 +164,7 @@ return
 
 def checkName(text):
     if "," in text:
-        raise "NamingError: ',' symbol can't be used as name! Invalid name is: %s" % text
+        error(exit=False, message="NamingError: ',' symbol can't be used as name! Invalid name is: %s" % text)
 
 class Menu(object):
     name = None
@@ -174,7 +178,7 @@ class Menu(object):
         if isinstance(scriptBuilder, ScriptBuilder):
             self.builder = scriptBuilder
         else:
-            raise "Can't create Menu instance! ScriptBuilder is null!"
+            error("Can't create Menu instance! ScriptBuilder is null!")
 
     #Overrides
     def pasteText(self, text, pressEnter=False):
@@ -208,11 +212,11 @@ class Menu(object):
     def __str__(self):
         return 'Menu "%s" binded on: %s' % (self.name, self.key)
 
-    def addSiteBookmark(self, menuName, itemName): #TODO drop menuName
+    def addSiteBookmark(self, itemName):
         checkName(itemName)
         self.builder.write("Menu, %s, Add, %s, OpenInBrowserMenuHandler" % (self.name, itemName))
 
-    #Used to type some text
+    #Use to type some text
     def addPrintText(self, itemName, text):
         checkName(itemName)
 #        return 'Menu "%s" binded on: %s' % (self.name, self.key)
@@ -222,18 +226,39 @@ class Menu(object):
         self.builder.handlers.append(handler + ":")
         self.pasteTextHandler(text, sendPaste=True, clipSave=True)
 
+    #Use to save to clipboard some text
+    def addPasteText(self, itemName, text):
+        checkName(itemName)
+        print("Adding PasteText %s" % text)
+        handler = self.createHandlerId()
+        self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (self.name, itemName, handler))
+        self.builder.handlers.append(handler + ":")
+        self.pasteTextHandler(text, sendPaste=False, clipSave=False)
+
     #Returns unique handler name
     def createHandlerId(self):
         self.handlerId += 1
         return self.name + 'Handler' + str(self.handlerId)
 
-def abbreviate(text): #returns first letter of each word
-    lines = text.split(" ")
+#returns first letter of each word
+#'-' and '=' symbols are skipped
+def abbreviate(text):
+    words = text.split(" ")
     name = ""
-    for i in lines:
-        if i and len(i) >= 1:
-            name += i[0]
+    for word in words:
+        if word and len(word) >= 1:
+            for char in word:
+                if char == '-' or char == '=':
+                    continue
+                name += char
+                break
     return name
+
+def error(message):
+    print("\nERROR OCCURRED DURING GENERATING SCRIPT. Error message:")
+    print(message)
+    if exit:
+        sys.exit(1)
 
 #Paste text from clipboard
 def pasteTextCode():
