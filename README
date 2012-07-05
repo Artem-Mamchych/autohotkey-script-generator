@@ -19,3 +19,6 @@ builder.hotKeyPrintText("3", "http://localhost:8080/app/") #Press [Win]+3 to get
 builder.generateScript() #After that file script.ahk  is created
 
 #For menu example see generateGitShortcutsMenu() code
+
+All created auto complete sequences are logged to file 'autocomplete-hints.txt'
+For example how to add new ones, see ahkutils-test.py file
