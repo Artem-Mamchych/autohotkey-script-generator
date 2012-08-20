@@ -21,7 +21,7 @@ def generate():
             top_scripts.invertMouseScrollWheel()
         if getCliArgument('--quake-shell'):
             top_scripts.addQuakeStyleShell()
-        top_scripts.googleTextFromAnyApp('#w')
+#        top_scripts.googleTextFromAnyApp('#g')
         top_scripts.googleTranslateSelectedText('#t')
 
         autocompl = commons.AutoComplete(builder, user_branches, user_remotes)
