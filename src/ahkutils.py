@@ -4,6 +4,13 @@ from sets import Set
 allowed_chars = Set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ')
 import sys
 
+#This enum contains 'ahk_class' names of applications
+class Application:
+    WinConsole = "ConsoleWindowClass"
+    Putty = "PuTTY"
+    GoogleChrome = "Chrome_WidgetWin_0"
+    TortoiseGit = "#32770"
+
 def sendCopy():
     return "Send, ^{vk43} ; Ctrl+C"
 
@@ -74,13 +81,30 @@ class ScriptBuilder(object):
         else:
             print("FATAL! " + text + "\tAutoCompleteSmart WAS NOT ADDED")
 
+    #This autocomplete sequence will be available only for selected applications
+    def addAutoCompleteForApp(self, *args, **data):
+        shortcut = data.get("shortcut")
+        data = data.get("data")
+        if shortcut and data:
+            self.key_bindings.append("\n::" + shortcut + "::")
+            for application, text in data.viewitems():
+                print 'Key is:', application
+                print 'Value is:', text
+                self.key_bindings.append('if WinActive("ahk_class %s") {' % application)
+                self.addAutoComplete(shortcut, text, ret=False, delay=False, bindHotKey=False)
+                self.key_bindings.append('}')
+            self.key_bindings.append("Return")
+        pass
+
     #To use autocomplete - type 'shortcut' text and press [Tab]
-    def addAutoComplete(self, shortcut, text, ret=True, delay=True):
-        self.key_bindings.append("\n::" + shortcut + "::")
+    #If called directly - this autocomplete sequence will be available for ALL applications
+    def addAutoComplete(self, shortcut, text, ret=True, delay=True, bindHotKey=True):
+        if bindHotKey:
+            self.key_bindings.append("\n::" + shortcut + "::")
         if delay:
             self.key_bindings.append(setKeyDelay(text))
-        else:
-            self.key_bindings.append(setKeyDelay())
+#        else:
+#            self.key_bindings.append(setKeyDelay())
         self.key_bindings.append("SendRaw " + text)
         self.logMessage(shortcut + "\tfor '" + text + "'\tAutoComplete was added!")
         if ret:
@@ -105,6 +129,22 @@ class ScriptBuilder(object):
         if pressEnter:
             self.key_bindings.append("Send {enter}")
         self.key_bindings.append("return")
+
+    def hotKeyWrapSelectedText(self, key, textLeft, textRight, pressEnter=False):
+#        print("Adding WrapSelectedText hotKey on Win+%s button" % key)
+        self.key_bindings.append("\n#%s::" % key)
+        self.key_bindings.append("""
+ClipSaved := ClipboardAll
+Clipboard =
+Send ^x
+ClipWait 1
+SendInput %s
+Send ^v
+SendInput %s
+Clipboard := ClipSaved
+ClipSaved =
+Return
+""" % (textLeft, textRight))
 
     def generateScript(self):
         print("Writing script file...")

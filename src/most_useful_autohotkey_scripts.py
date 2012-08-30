@@ -1,4 +1,5 @@
 import ahkutils as ahk
+from ahkutils import Application
 
 class AutoComplete(object):
     scriptBuilder = None
@@ -16,14 +17,10 @@ class AutoComplete(object):
         self.scriptBuilder.addAutoComplete("m js", "mvn -o clean jetty:run -Ddev.env=stage")
         self.scriptBuilder.addAutoComplete("m cv", "mvn -o cobertura:cobertura")
         self.scriptBuilder.addAutoComplete("m r", "mvn dependency:resolve dependency:resolve-plugins")
-        self.scriptBuilder.addAutoComplete("m dt", "mvn dependency:tree > tree")
+        self.scriptBuilder.addAutoCompleteForApp(shortcut="m dt", data={Application.WinConsole : "mvn dependency:tree > tree"})
 
-        self.scriptBuilder.ifApplication_AutoComplete("ConsoleWindowClass")
-        self.scriptBuilder.addAutoComplete("ver", "less pom.xml | grep description -B 6 -A 3")
-        self.scriptBuilder.ifApplication_AutoComplete("PuTTY")
-        self.scriptBuilder.addAutoComplete("ver", "less pom.xml | grep description -B 6 -A 3")
-        self.scriptBuilder.addAutoComplete("cls", "clear")
-        self.scriptBuilder.endIfApplication_AutoComplete()
+        self.scriptBuilder.addAutoCompleteForApp(shortcut="ver", data={Application.Putty : "less pom.xml | grep description -B 6 -A 3"})
+        self.scriptBuilder.addAutoCompleteForApp(shortcut="cls", data={Application.Putty : "clear"})
 
     def insertCommonGitAliases(self):
         self.scriptBuilder.addAutoCompleteSmart("git pull")
