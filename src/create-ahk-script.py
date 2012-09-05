@@ -14,6 +14,8 @@ def generate():
     builder = ahk.ScriptBuilder()
     generateGitShortcutsMenu(builder)
 
+    builder.addAutoCompleteFromFile('config/autocomplete.txt')
+    builder.addAutoCompleteFromFile('config/autocomplete-git.txt')
     if os.path.exists("most_useful_autohotkey_scripts.py"):
         import most_useful_autohotkey_scripts as commons
         top_scripts = commons.CommonScripts(builder)

@@ -1,0 +1,31 @@
+#add your commands here:
+git pull
+git pull upstream
+git status
+git stash save
+git stash pop
+git stash list
+git checkout
+git rebase
+git rebase --continue
+git rebase --skip
+git rebase --abort
+git branch
+git reset --hard HEAD
+git add --interactive #provides a menu for adding, updating, reverting, and more
+
+git checkout -b #Switched to a new branch "rack"
+git log -p
+git log --author=gordon@vrbo.com #shows me my commits
+git fetch upstream; git diff upstream/master
+git log --pretty=oneline --abbrev-commit
+git log --oneline
+git log --oneline --stat
+
+git reset --soft HEAD~1
+
+#git log --oneline --no-merges
+#git --no-pager log -10
+#git log upstream..HEAD
+#git log --grep='DE12345'
+

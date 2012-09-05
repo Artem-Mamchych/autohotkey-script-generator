@@ -23,38 +23,19 @@ class AutoComplete(object):
         self.scriptBuilder.addAutoCompleteForApp(shortcut="cls", data={Application.Putty : "clear"})
 
     def insertCommonGitAliases(self):
-        self.scriptBuilder.addAutoCompleteSmart("git pull")
-        self.scriptBuilder.addAutoComplete("gpu", "git pull -v --progress upstream")
-        self.scriptBuilder.addAutoCompleteSmart("git push --progress --force amamchych")
-        self.scriptBuilder.addAutoCompleteSmart("git status")
-        self.scriptBuilder.addAutoCompleteSmart("git stash save")
-        self.scriptBuilder.addAutoCompleteSmart("git stash pop")
-        self.scriptBuilder.addAutoCompleteSmart("git stash list")
-        self.scriptBuilder.addAutoCompleteSmart("git checkout")
-        self.scriptBuilder.addAutoCompleteSmart("git rebase")
-        self.scriptBuilder.addAutoCompleteSmart("git rebase --continue")
-        self.scriptBuilder.addAutoCompleteSmart("git rebase --skip")
-        self.scriptBuilder.addAutoCompleteSmart("git rebase --abort")
         self.scriptBuilder.addAutoComplete("g'", "git commit -a -m ''")
-        self.scriptBuilder.addAutoCompleteSmart("git branch")
-        self.scriptBuilder.addAutoCompleteSmart("git reset --hard HEAD")
-        self.scriptBuilder.addAutoCompleteSmart("git add --interactive") #provides a menu for adding, updating, reverting, and more
         self.scriptBuilder.addAutoComplete("gl", "git log --graph --abbrev-commit --date=relative")
-		#TODO: ahk escape % | AutoHotkey's default escape character is accent/backtick (`)
+        #TODO: ahk escape % | AutoHotkey's default escape character is accent/backtick (`)
         self.scriptBuilder.addAutoComplete("gll", "git log --graph --pretty=format':`%C(yellow)`%h`%C(red)`%d`%Creset `%s `%C(white) `%an, `%ar`%Creset'")
-        self.scriptBuilder.addAutoCompleteSmart("git log -p")
         self.scriptBuilder.addAutoComplete("g1", "git log -p HEAD~..HEAD")
         self.scriptBuilder.addAutoComplete("gchk", "git fsck --full --strict --unreachable")
-
         self.scriptBuilder.addAutoComplete("git cp", "git cherry-pick")
         self.scriptBuilder.addAutoComplete("git fix", "git commit --amend -C HEAD") #git fix FILE1 FILE2;
         self.scriptBuilder.addAutoComplete("git ren", "git branch -m old new")
-        self.scriptBuilder.addAutoCompleteSmart("git reset --soft HEAD~1")
         self.scriptBuilder.addAutoComplete("git lastcgh", "git rev-list -n 1 HEAD -- [file_path]") #shows hash of last change of file
         self.scriptBuilder.addAutoComplete("git unrm", "git checkout [deleting_commit]^ -- [file_path]")
         self.scriptBuilder.addAutoComplete("git deleted", "git log --diff-filter=D --summary") #get all the commits which have deleted files 
         self.addGitAliasesSpecificForUserBranches()
-
 
     def addGitAliasesSpecificForUserBranches(self):
         if not self.user_remotes:

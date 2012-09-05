@@ -1,6 +1,8 @@
 #autohotkey utils
 import os
 from sets import Set
+from utils import stringutils as su
+
 allowed_chars = Set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ')
 import sys
 
@@ -10,6 +12,8 @@ class Application:
     Putty = "PuTTY"
     GoogleChrome = "Chrome_WidgetWin_0"
     TortoiseGit = "#32770"
+    FireFox = "MozillaWindowClass"
+    UnrealCommander = "TxUNCOM"
 
 def sendCopy():
     return "Send, ^{vk43} ; Ctrl+C"
@@ -73,13 +77,28 @@ class ScriptBuilder(object):
     def endIfApplication_AutoComplete(self):
         self.key_bindings.append("#IfWinActive")
 
+    def addAutoCompleteFromFile(self, filename):
+        if not os.path.exists(filename) or not os.path.isfile(filename):
+            print("Error! %s file are not exists!")
+            return
+
+        array = []
+        for line in open(filename, "r"):
+            array.append(line)
+            command = su.trimComments(line)
+            if command:
+                status = self.addAutoCompleteSmart(command)
+                print(">>trimComments> " + su.trimComments(line) + "\t\t>>status> " + status)
+
     def addAutoCompleteSmart(self, text, ret=True, delay=True):
         name = abbreviate(text)
         if name not in self.abbreviations:
             self.abbreviations.append(name)
             self.addAutoComplete(name, text, ret=True, delay=delay)
+            return "%s%s" % (su.defaultCommentStartSequence, name)
         else:
             print("FATAL! " + text + "\tAutoCompleteSmart WAS NOT ADDED")
+            return "%s[%s] sequence are already used!" % (su.defaultCommentStartSequence, name)
 
     #This autocomplete sequence will be available only for selected applications
     def addAutoCompleteForApp(self, *args, **data):
@@ -94,7 +113,7 @@ class ScriptBuilder(object):
                 self.addAutoComplete(shortcut, text, ret=False, delay=False, bindHotKey=False)
                 self.key_bindings.append('}')
             self.key_bindings.append("Return")
-        pass
+        return shortcut
 
     #To use autocomplete - type 'shortcut' text and press [Tab]
     #If called directly - this autocomplete sequence will be available for ALL applications
@@ -109,6 +128,7 @@ class ScriptBuilder(object):
         self.logMessage(shortcut + "\tfor '" + text + "'\tAutoComplete was added!")
         if ret:
             self.key_bindings.append("Return")
+        return shortcut
 
     def addAutoCompleteTime(self, shortcut, timeFormat, ret=True):
         self.key_bindings.append("\n::" + shortcut + "::\nFormatTime, T, %A_Now%, " + timeFormat + "\nSendInput %T%")
@@ -132,6 +152,7 @@ class ScriptBuilder(object):
 
     def hotKeyWrapSelectedText(self, key, textLeft, textRight, pressEnter=False):
 #        print("Adding WrapSelectedText hotKey on Win+%s button" % key)
+#        self.bindKey("#" + key, 'Send, ^{sc02E}%s^{sc02F}%s' % (textLeft, textRight), ret=False)
         self.key_bindings.append("\n#%s::" % key)
         self.key_bindings.append("""
 ClipSaved := ClipboardAll
