@@ -1,6 +1,8 @@
 #add your commands here:
 git pull
 git pull upstream
+git pull origin
+git fetch origin
 git status
 git stash save
 git stash pop
@@ -21,6 +23,7 @@ git fetch upstream; git diff upstream/master
 git log --pretty=oneline --abbrev-commit
 git log --oneline
 git log --oneline --stat
+#git log --no-merges --pretty=format':%s %C(white)' #only messages
 
 git reset --soft HEAD~1
 

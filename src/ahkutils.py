@@ -77,6 +77,7 @@ class ScriptBuilder(object):
     def endIfApplication_AutoComplete(self):
         self.key_bindings.append("#IfWinActive")
 
+        #TODO add submenus
     def addAutoCompleteFromFile(self, filename):
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
@@ -87,8 +88,14 @@ class ScriptBuilder(object):
             array.append(line)
             command = su.trimComments(line)
             if command:
-                status = self.addAutoCompleteSmart(command)
-                print(">>trimComments> " + su.trimComments(line) + "\t\t>>status> " + status)
+                if '==' in command:
+                    keyAndCommand = command.split('==')
+                    if len(keyAndCommand) != 2:
+                        print("Error! failed to parse; " + command)
+                        continue
+                    status = self.addAutoComplete(keyAndCommand[0], keyAndCommand[1])
+                else:
+                    status = self.addAutoCompleteSmart(command)
 
     def addAutoCompleteSmart(self, text, ret=True, delay=True):
         name = abbreviate(text)
@@ -181,7 +188,8 @@ Return
         for text in self.menu_key_bindings: #4. Write key bindings
             self.write(text)
         self.ahk_file.close()
-        self.log_file.close()
+        if self.log_file:
+            self.log_file.close()
         print("DONE")
 
     #Uses system clipboard
@@ -257,7 +265,7 @@ class Menu(object):
     def pasteText(self, text, pressEnter=False):
         pass
 
-    def pasteTextHandler(self, text, sendPaste=False, clipSave=False):
+    def pasteTextHandler(self, text, sendPaste=False, clipSave=False, beforeReturn=False):
         if clipSave:
             self.builder.handlers.append("clipboard = %ClipSaved%")
     #    handlers.append("ClipWait")
@@ -266,6 +274,8 @@ class Menu(object):
     #    handlers.append("Sleep, 1")
         if sendPaste:
             self.builder.handlers.append(pasteTextCode())
+        if beforeReturn:
+            self.builder.handlers.append(beforeReturn)
         if clipSave:
             self.builder.handlers.append("clipboard = %ClipSaved%")
     #    handlers.append("ClipWait")
@@ -289,15 +299,39 @@ class Menu(object):
         checkName(itemName)
         self.builder.write("Menu, %s, Add, %s, OpenInBrowserMenuHandler" % (self.name, itemName))
 
+    @staticmethod
+    def createPrintTextMenuFromFile(filename, builder, deleteOnClick=False):
+        if not os.path.exists(filename) or not os.path.isfile(filename):
+            print("Error! %s file are not exists!")
+            return
+
+        array = []
+        menu = None
+        for line in open(filename, "r"):
+            array.append(line)
+            command = su.trimComments(line)
+            if command:
+                if 'Hotkey=' in command:
+                    print(command)
+                    hotKey = command.replace('Hotkey=', '')
+                    menu = Menu(hotKey, hotKey, builder)
+                else:
+                    print("line: ")
+                    print(command)
+                    menu.addPrintText(command, command, deleteOnClick) #label, text
+        if menu:
+            menu.assignMenuHotKey()
+
     #Use to type some text
-    def addPrintText(self, itemName, text):
+    def addPrintText(self, itemName, text, deleteOnClick=False):
+        itemName = itemName.replace(",", "")
         checkName(itemName)
 #        return 'Menu "%s" binded on: %s' % (self.name, self.key)
         print("Adding PrintText %s" % text)
         handler = self.createHandlerId()
         self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (self.name, itemName, handler))
         self.builder.handlers.append(handler + ":")
-        self.pasteTextHandler(text, sendPaste=True, clipSave=True)
+        self.pasteTextHandler(text, sendPaste=True, clipSave=True, beforeReturn="Menu, %s, delete, %s" % (self.name, itemName))
 
     #Use to save to clipboard some text
     def addPasteText(self, itemName, text):
@@ -335,9 +369,4 @@ def error(message):
 
 #Paste text from clipboard
 def pasteTextCode():
-    return """#IfWinActive ahk_class ConsoleWindowClass
-SendInput {Raw}%clipboard%
-#IfWinActive
-#IfWinNotActive ahk_class ConsoleWindowClass
-Send ^{vk56}
-#IfWinNotActive"""
+    return """SendInput {Raw}%clipboard%"""
