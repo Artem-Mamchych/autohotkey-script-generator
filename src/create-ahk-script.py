@@ -7,6 +7,7 @@ description='main automation script for easy generating autohotkey menus, hotkey
 version = 0.5
 user_branches = list()
 user_remotes = list()
+menuItem_id = 0
 
 def generate():
     print("Generating AHK Script...")
@@ -29,7 +30,6 @@ def generate():
         autocompl = commons.AutoComplete(builder, user_branches, user_remotes)
         autocompl.insertCurrentDate_Time()
         autocompl.insertCommonGitAliases()
-        autocompl.insertMavenAliases()
 
     if os.path.exists("application_specific_bindings.py"):
         import application_specific_bindings as asp
@@ -81,4 +81,5 @@ if __name__ == "__main__":
     #List type (--branches=master,develop,experimental) command line arguments are fetched here
     user_branches = getCliArgument('--branches=')
     user_remotes = getCliArgument('--remotes=')
+    menu_files = getCliArgument('--menufiles=')
     generate()

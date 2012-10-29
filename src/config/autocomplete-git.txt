@@ -1,4 +1,4 @@
-#add your commands here:
+[ConsoleWindowClass]
 git pull
 git pull upstream
 git pull origin
@@ -27,8 +27,21 @@ git log --oneline --stat
 
 git reset --soft HEAD~1
 
+g'==git commit -a -m ''
+gl==git log --graph --abbrev-commit --date=relative
+#TODO: ahk escape % | AutoHotkey's default escape character is accent/backtick (`)
+gll==git log --graph --pretty=format':`%C(yellow)`%h`%C(red)`%d`%Creset `%s `%C(white) `%an, `%ar`%Creset'
+g1==git log -p HEAD~..HEAD
+gchk==git fsck --full --strict --unreachable
+git cp==git cherry-pick
+git fix==git commit --amend -C HEAD #git fix FILE1 FILE2;
+git ren==git branch -m old new
+git lastcgh==git rev-list -n 1 HEAD -- [file_path] #shows hash of last change of file
+git unrm==git checkout [deleting_commit]^ -- [file_path]
+git deleted==git log --diff-filter=D --summary #get all the commits which have deleted files 
+
 #git log --oneline --no-merges
 #git --no-pager log -10
 #git log upstream..HEAD
 #git log --grep='DE12345'
-
+[end]

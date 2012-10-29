@@ -1,40 +1,12 @@
 import ahkutils as ahk
-from ahkutils import Application
+from ahkutils import App
 
 class AutoComplete(object):
     scriptBuilder = None
     user_branches = None
     user_remotes = None
 
-    def insertMavenAliases(self):
-        self.scriptBuilder.addAutoComplete("m dep", "mvn clean deploy -U -Dmaven.test.skip=true -DskipTests -Dshould.deploy.to.TEST=true")
-        self.scriptBuilder.addAutoComplete("m cl", "mvn -o clean")
-        self.scriptBuilder.addAutoComplete("m t", "mvn -o clean test")
-        self.scriptBuilder.addAutoComplete("m tt", "mvn -o clean test -Dmaven.surefire.debug -Dsurefire.useFile=false -Dtest=")
-        self.scriptBuilder.addAutoComplete("m i", "mvn -o clean install")
-        self.scriptBuilder.addAutoComplete("m it", "mvn clean install -Dmaven.test.skip=true")
-        self.scriptBuilder.addAutoComplete("m jt", "mvn -o clean jetty:run -Ddev.env=test")
-        self.scriptBuilder.addAutoComplete("m js", "mvn -o clean jetty:run -Ddev.env=stage")
-        self.scriptBuilder.addAutoComplete("m cv", "mvn -o cobertura:cobertura")
-        self.scriptBuilder.addAutoComplete("m r", "mvn dependency:resolve dependency:resolve-plugins")
-        self.scriptBuilder.addAutoCompleteForApp(shortcut="m dt", data={Application.WinConsole : "mvn dependency:tree > tree"})
-
-        self.scriptBuilder.addAutoCompleteForApp(shortcut="ver", data={Application.Putty : "less pom.xml | grep description -B 6 -A 3"})
-        self.scriptBuilder.addAutoCompleteForApp(shortcut="cls", data={Application.Putty : "clear"})
-
     def insertCommonGitAliases(self):
-        self.scriptBuilder.addAutoComplete("g'", "git commit -a -m ''")
-        self.scriptBuilder.addAutoComplete("gl", "git log --graph --abbrev-commit --date=relative")
-        #TODO: ahk escape % | AutoHotkey's default escape character is accent/backtick (`)
-        self.scriptBuilder.addAutoComplete("gll", "git log --graph --pretty=format':`%C(yellow)`%h`%C(red)`%d`%Creset `%s `%C(white) `%an, `%ar`%Creset'")
-        self.scriptBuilder.addAutoComplete("g1", "git log -p HEAD~..HEAD")
-        self.scriptBuilder.addAutoComplete("gchk", "git fsck --full --strict --unreachable")
-        self.scriptBuilder.addAutoComplete("git cp", "git cherry-pick")
-        self.scriptBuilder.addAutoComplete("git fix", "git commit --amend -C HEAD") #git fix FILE1 FILE2;
-        self.scriptBuilder.addAutoComplete("git ren", "git branch -m old new")
-        self.scriptBuilder.addAutoComplete("git lastcgh", "git rev-list -n 1 HEAD -- [file_path]") #shows hash of last change of file
-        self.scriptBuilder.addAutoComplete("git unrm", "git checkout [deleting_commit]^ -- [file_path]")
-        self.scriptBuilder.addAutoComplete("git deleted", "git log --diff-filter=D --summary") #get all the commits which have deleted files 
         self.addGitAliasesSpecificForUserBranches()
 
     def addGitAliasesSpecificForUserBranches(self):
@@ -54,9 +26,6 @@ class AutoComplete(object):
             for branch in self.user_branches:
                 self.scriptBuilder.addAutoCompleteSmart("git push --progress %s %s:%s" % (remote, branch, branch))
                 self.scriptBuilder.addAutoCompleteSmart("git push --progress %s %s:%s --force " % (remote, branch, branch))
-
-    def insertLinuxShellAliases(self):
-        self.scriptBuilder.addAutoComplete("diskfree", "du -s ./* | sort -nr| cut -f 2-|xargs -i du -sh {}")
 
     def insertCurrentDate_Time(self):
         self.scriptBuilder.addAutoCompleteTime("1date", "yyyy-MM-dd")
@@ -135,12 +104,3 @@ Clipboard := MyClip
     def addQuakeStyleShell(self):
         print("Quake style shell support based on Console2 is added. Hotkey is: [Ctrl]+[`]")
         self.scriptBuilder.key_bindings.append(ahk.includeFile("includes/QuakeTerminal.ahk"))
-
-    def htmlEditCommons(self):
-#        self.scriptBuilder.bindKey("^sc030", "Send, ^{sc02E}<b>^{sc02F}</b>", ret=False) #Wrap text example
-        self.scriptBuilder.addAutoComplete("$val", "$('#').val();")
-        self.scriptBuilder.addAutoComplete("$html", "$('#').html();")
-        self.scriptBuilder.addAutoComplete("$ex", "$('#').length;")
-        self.scriptBuilder.addAutoComplete("$clk", "$('#form-submit:first').trigger('click');")
-        self.scriptBuilder.addAutoComplete("$chk", "$('#').attr('checked', true);")
-        self.scriptBuilder.addAutoComplete("$dd", "$('# option:last').attr('selected', 'selected');")

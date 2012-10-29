@@ -7,13 +7,15 @@ allowed_chars = Set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 import sys
 
 #This enum contains 'ahk_class' names of applications
-class Application:
+class App:
     WinConsole = "ConsoleWindowClass"
     Putty = "PuTTY"
     GoogleChrome = "Chrome_WidgetWin_0"
     TortoiseGit = "#32770"
     FireFox = "MozillaWindowClass"
     UnrealCommander = "TxUNCOM"
+    NotepadPlusPlus = "Notepad++"
+    Skype = "tSkMainForm"
 
 def sendCopy():
     return "Send, ^{vk43} ; Ctrl+C"
@@ -82,13 +84,37 @@ class ScriptBuilder(object):
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
-
         array = []
+        applicationChosen = None
+        autoCompleteAppData = None
         for line in open(filename, "r"):
             array.append(line)
             command = su.trimComments(line)
             if command:
-                if '==' in command:
+                if command.startswith('[') and command.endswith(']'): #Works only for selected application
+                    if applicationChosen:
+                        print("[addAutoCompleteForApp] writing %s entries" % len(autoCompleteAppData))
+                        self.addAutoCompleteForApp(application=applicationChosen, data=autoCompleteAppData)
+                    if command == '[end]':
+                        applicationChosen = None
+                        continue
+
+                    applicationChosen = command.replace('[', '').replace(']', '')
+                    autoCompleteAppData = dict()
+                    print("[addAutoCompleteForApp] Section for: " + applicationChosen)
+                    continue
+                if applicationChosen:
+                    if '==' in command:
+                        keyAndCommand = command.split('==')
+                        if len(keyAndCommand) != 2:
+                            print("Error! failed to parse; " + command)
+                            continue
+                        autoCompleteAppData[keyAndCommand[0]] = keyAndCommand[1]
+                    else:
+                        name = self.createTextAlias(command)
+                        if name:
+                            autoCompleteAppData[name] = command
+                elif '==' in command: #Works in all applications
                     keyAndCommand = command.split('==')
                     if len(keyAndCommand) != 2:
                         print("Error! failed to parse; " + command)
@@ -97,10 +123,16 @@ class ScriptBuilder(object):
                 else:
                     status = self.addAutoCompleteSmart(command)
 
-    def addAutoCompleteSmart(self, text, ret=True, delay=True):
+    def createTextAlias(self, text):
         name = abbreviate(text)
         if name not in self.abbreviations:
             self.abbreviations.append(name)
+            return name
+        return None
+
+    def addAutoCompleteSmart(self, text, ret=True, delay=True):
+        name = self.createTextAlias(text)
+        if name:
             self.addAutoComplete(name, text, ret=True, delay=delay)
             return "%s%s" % (su.defaultCommentStartSequence, name)
         else:
@@ -109,16 +141,16 @@ class ScriptBuilder(object):
 
     #This autocomplete sequence will be available only for selected applications
     def addAutoCompleteForApp(self, *args, **data):
-        shortcut = data.get("shortcut")
+        application = data.get("application")
         data = data.get("data")
-        if shortcut and data:
-            for application, text in data.viewitems():
-                self.key_bindings.append('\n#IfWinActive ahk_class %s' % application)
+        if application and data:
+            self.key_bindings.append('\n#IfWinActive ahk_class %s' % application)
+            for shortcut, text in data.viewitems():
                 self.key_bindings.append("::" + shortcut + "::")
                 self.addAutoComplete(shortcut, text, ret=False, delay=False, bindHotKey=False)
                 self.key_bindings.append("Return")
-                self.key_bindings.append('#IfWinActive')
-        return shortcut
+            self.key_bindings.append('#IfWinActive')
+        return
 
     #To use autocomplete - type 'shortcut' text and press [Tab]
     #If called directly - this autocomplete sequence will be available for ALL applications
