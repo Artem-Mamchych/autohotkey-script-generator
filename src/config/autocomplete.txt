@@ -18,14 +18,4 @@ ver==less pom.xml | grep description -B 6 -A 3
 cls==clear
 free==du -s ./* | sort -nr| cut -f 2-|xargs -i du -sh {}
 
-[Chrome_WidgetWin_0]
-#Wrap text example
-#self.scriptBuilder.bindKey("^sc030Send, ^{sc02E}<b>^{sc02F}</b>", ret=False)
-.val==$('#').val();
-.html==$('#').html();
-.ex==$('#').length;
-.clk==$('#form-submit:first').trigger('click');
-.chk==$('#').attr('checked', true);
-.dd==$('# option:last').attr('selected', 'selected');
-
 [end]

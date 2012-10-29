@@ -1,9 +1,7 @@
 #autohotkey utils
 import os
-from sets import Set
 from utils import stringutils as su
 
-allowed_chars = Set('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ')
 import sys
 
 #This enum contains 'ahk_class' names of applications
@@ -73,22 +71,13 @@ class ScriptBuilder(object):
     def addHandler(self, text):
         self.handlers.append(text)
 
-    def ifApplication_AutoComplete(self, app):
-        self.key_bindings.append("#IfWinActive ahk_class " + app)
-
-    def endIfApplication_AutoComplete(self):
-        self.key_bindings.append("#IfWinActive")
-
-
     def addAutoCompleteFromFile(self, filename):
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
-        array = []
         applicationChosen = None
         autoCompleteAppData = None
         for line in open(filename, "r"):
-            array.append(line)
             command = su.trimComments(line)
             if command:
                 if command.startswith('[') and command.endswith(']'): #Works only for selected application
@@ -177,11 +166,33 @@ class ScriptBuilder(object):
         if ret:
             self.key_bindings.append("Return")
 
-    def hotKeyPrintText(self, key, text, pressEnter=False):
+    def addHotKeysFromFile(self, filename):
+        if not os.path.exists(filename) or not os.path.isfile(filename):
+            print("Error! %s file are not exists!")
+            return
+        for line in open(filename, "r"):
+            command = su.trimComments(line)
+            if not command:
+                continue
+            if command == '[end]':
+                self.key_bindings.append("#IfWinActive")
+            elif command.startswith('[') and command.endswith(']'):
+                self.key_bindings.append("\n#IfWinActive ahk_class " + command.replace('[', '').replace(']', ''))
+            elif '==' in command:
+                keyAndCommand = command.split('==')
+                if len(keyAndCommand) != 2:
+                    print("Error! failed to parse; " + command)
+                    continue
+                self.hotKeyPrintText(keyAndCommand[0], keyAndCommand[1], pressEnter=False, useKeyDelay=False)
+            else:
+                print("[addHotKeysFromFile] Error: Failed to parse string: " + command)
+
+    def hotKeyPrintText(self, key, text, pressEnter=False, useKeyDelay=True):
         #TODO check text for empty srt
 #        print("Adding PrintText hotKey on Win+%s button" % key)
         self.key_bindings.append("\n#%s::" % key)
-        self.key_bindings.append(setKeyDelay(text))
+        if useKeyDelay:
+            self.key_bindings.append(setKeyDelay(text))
         self.key_bindings.append("SendRaw "+ text)
         if pressEnter:
             self.key_bindings.append("Send {enter}")
