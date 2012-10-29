@@ -77,7 +77,7 @@ class ScriptBuilder(object):
     def endIfApplication_AutoComplete(self):
         self.key_bindings.append("#IfWinActive")
 
-        #TODO add submenus
+
     def addAutoCompleteFromFile(self, filename):
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
@@ -112,14 +112,12 @@ class ScriptBuilder(object):
         shortcut = data.get("shortcut")
         data = data.get("data")
         if shortcut and data:
-            self.key_bindings.append("\n::" + shortcut + "::")
             for application, text in data.viewitems():
-                print 'Key is:', application
-                print 'Value is:', text
-                self.key_bindings.append('if WinActive("ahk_class %s") {' % application)
+                self.key_bindings.append('\n#IfWinActive ahk_class %s' % application)
+                self.key_bindings.append("::" + shortcut + "::")
                 self.addAutoComplete(shortcut, text, ret=False, delay=False, bindHotKey=False)
-                self.key_bindings.append('}')
-            self.key_bindings.append("Return")
+                self.key_bindings.append("Return")
+                self.key_bindings.append('#IfWinActive')
         return shortcut
 
     #To use autocomplete - type 'shortcut' text and press [Tab]
@@ -300,7 +298,7 @@ class Menu(object):
         self.builder.write("Menu, %s, Add, %s, OpenInBrowserMenuHandler" % (self.name, itemName))
 
     @staticmethod
-    def createPrintTextMenuFromFile(filename, builder, deleteOnClick=False):
+    def createPrintTextMenuFromFile(filename, builder, deleteOnClick=False): #TODO add submenus support
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
@@ -331,7 +329,10 @@ class Menu(object):
         handler = self.createHandlerId()
         self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (self.name, itemName, handler))
         self.builder.handlers.append(handler + ":")
-        self.pasteTextHandler(text, sendPaste=True, clipSave=True, beforeReturn="Menu, %s, delete, %s" % (self.name, itemName))
+        beforeReturn = ""
+        if deleteOnClick:
+            beforeReturn="Menu, %s, delete, %s" % (self.name, itemName)
+        self.pasteTextHandler(text, sendPaste=True, clipSave=True, beforeReturn=beforeReturn)
 
     #Use to save to clipboard some text
     def addPasteText(self, itemName, text):
