@@ -5,6 +5,7 @@ import ahkutils as ahk
 
 description='main automation script for easy generating autohotkey menus, hotkey bindings, text autocomplete and more'
 version = 0.5
+config_dir = os.path.join(sys.path[0],"config")
 user_branches = list()
 user_remotes = list()
 menuItem_id = 0
@@ -13,10 +14,14 @@ def generate():
     print("Generating AHK Script...")
 
     builder = ahk.ScriptBuilder()
-    generateGitShortcutsMenu(builder)
+#    generateGitShortcutsMenu(builder)
+    for file in getFilesByMask(config_dir, "hotkeys", ".txt"):
+        print("Parsing hotkeys config file: " + file)
+        builder.addHotKeysFromFile(file)
+    for file in getFilesByMask(config_dir, "autocomplete", ".txt"):
+        print("Parsing autocomplete config file: " + file)
+        builder.addAutoCompleteFromFile(file)
 
-    builder.addAutoCompleteFromFile('config/autocomplete.txt')
-    builder.addAutoCompleteFromFile('config/autocomplete-git.txt')
     if os.path.exists("most_useful_autohotkey_scripts.py"):
         import most_useful_autohotkey_scripts as commons
         top_scripts = commons.CommonScripts(builder)
@@ -36,30 +41,14 @@ def generate():
         asp.generate(builder)
     builder.generateScript()
 
-def generateGitShortcutsMenu(builder):
-    print("generatePrivatePartOfScript")
-    git = ahk.Menu("Git", "g", builder)
-    git.addPrintText("dependency:tree > tree", "mvn dependency:tree > tree")
-    git.addPrintText("rebase", "git rebase master")
-    git.addPrintText("status", "git status")
-    git.addPrintText("cherry-pick", "git cherry-pick 5d3e1b6")
-    git.addPrintText("stash save", "git stash save message")
-    git.addPrintText("stash apply", "git stash apply")
-    git.addPrintText("blame lines", "git blame -L 160,+10 Hello.java")
-    git.addPrintText("push", "git push origin master")
-    git.addPrintText("delete remote branch", "git push origin :br")
-    git.addPrintText("delete local branch", "git branch -d br")
-    git.addPrintText("uncommit", "git reset --soft HEAD~1")
-    git.addPrintText("reset --hard", "git reset --hard HEAD")
-    git.addPrintText("squash", "git merge --squash --progress artem/tag-ok")
-    git.addPrintText("merge --theirs", "git merge upstream --theirs")
-    git.addPrintText("fetch remote br", "git fetch origin [remote-branch]:[new-local-branch]")
-    git.addPrintText("checkout remote br", "git checkout -b 12.04.0 origin/12.04.0")
-
-    git.addPrintText("deploy.to.TEST/skipTests", "mvn -U clean deploy -Dmaven.test.skip=true -DskipTests -Dshould.deploy.to.TEST=true")
-    git.addPrintText("deploy to mvn/skipTests", "mvn -U clean deploy -Dmaven.test.skip=true -DskipTests -Dshould.deploy.to.TEST=false")
-    git.addPrintText("run tests/deploy to mvn", "mvn -U clean deploy -Dshould.deploy.to.TEST=false")
-    git.assignMenuHotKey()
+def getFilesByMask(directory, prefix, extension):
+    files = list()
+    os.chdir(directory)
+    for file in os.listdir("."):
+        if file.endswith(extension) and prefix in file:
+            files.append(os.path.join(config_dir, file))
+    os.chdir(sys.path[0])
+    return files
 
 def getCliArgument(name):
     if '=' not in name:

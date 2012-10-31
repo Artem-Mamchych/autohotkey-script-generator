@@ -1,5 +1,4 @@
 import ahkutils as ahk
-from ahkutils import App
 
 class AutoComplete(object):
     scriptBuilder = None
