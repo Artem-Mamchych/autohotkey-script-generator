@@ -1,19 +1,37 @@
 #autohotkey utils
 import os
 from utils import stringutils as su
+application = dict() #This dict contains 'ahk_class' names of applications
+ahk_classes_file = "ahk_classes.txt"
+ahk_classes_file_loaded = None
 
 import sys
 
-#This enum contains 'ahk_class' names of applications
-class App:
-    WinConsole = "ConsoleWindowClass"
-    Putty = "PuTTY"
-    GoogleChrome = "Chrome_WidgetWin_0"
-    TortoiseGit = "#32770"
-    FireFox = "MozillaWindowClass"
-    UnrealCommander = "TxUNCOM"
-    NotepadPlusPlus = "Notepad++"
-    Skype = "tSkMainForm"
+def getApp(key):
+    key = key.replace('[', '').replace(']', '')
+    if key.startswith("ahk_"):
+        return key
+    elif key.upper() in application:
+        return 'ahk_class ' + application[key.upper()]
+    else:
+        error("Application alias '%s' is not defined in file: \n%s"
+            "\nAdd it to file or use 'ahk_class AppClassName' syntax" % (key, ahk_classes_file_loaded))
+
+def loadApplicationSettings(filename=os.path.join(sys.path[0], "config", ahk_classes_file)):
+    global ahk_classes_file_loaded
+    ahk_classes_file_loaded = filename
+    for line in open(filename, "r"):
+        if line and '=' in line:
+            if len(line.split('=')) != 2:
+                print("Error! failed to parse ahk_classes.txt line: " + line)
+                continue
+            (key, app) = line.split('=')
+            application[key.upper()] = app.replace('\n', '')
+
+class KeyModifier:
+    Ctrl = "^"
+    Alt = "~"
+    Win = "#"
 
 def sendCopy():
     return "Send, ^{vk43} ; Ctrl+C"
@@ -48,6 +66,16 @@ def includeFile(path):
             lines += line
     return lines
 
+def parseHotKey(text):
+    if text.startswith("Ctrl+"):
+        return text.replace("Ctrl+", KeyModifier.Ctrl)
+    elif text.startswith("Alt+"):
+        return text.replace("Alt+", KeyModifier.Alt)
+    elif text.startswith("Win+"):
+        return text.replace("Win+", KeyModifier.Win)
+    else:
+        return KeyModifier.Win + text
+
 #Root object with base methods to build ahk script
 class ScriptBuilder(object):
     ahk_file = None
@@ -64,6 +92,7 @@ class ScriptBuilder(object):
         self.menu_key_bindings = list()
         self.key_bindings = list()
         self.abbreviations = list()
+        loadApplicationSettings()
 
     def getFileInstance(self):
         return self.ahk_file
@@ -72,6 +101,7 @@ class ScriptBuilder(object):
         self.handlers.append(text)
 
     def addAutoCompleteFromFile(self, filename):
+        print("Parsing autocomplete config file: " + filename)
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
@@ -88,7 +118,7 @@ class ScriptBuilder(object):
                         applicationChosen = None
                         continue
 
-                    applicationChosen = command.replace('[', '').replace(']', '')
+                    applicationChosen = getApp(command)
                     autoCompleteAppData = dict()
                     print("[addAutoCompleteForApp] Section for: " + applicationChosen)
                     continue
@@ -133,7 +163,7 @@ class ScriptBuilder(object):
         application = data.get("application")
         data = data.get("data")
         if application and data:
-            self.key_bindings.append('\n#IfWinActive ahk_class %s' % application)
+            self.key_bindings.append('\n#IfWinActive %s' % application)
             for shortcut, text in data.viewitems():
                 self.key_bindings.append("::" + shortcut + "::")
                 self.addAutoComplete(shortcut, text, ret=False, delay=False, bindHotKey=False)
@@ -167,6 +197,7 @@ class ScriptBuilder(object):
             self.key_bindings.append("Return")
 
     def addHotKeysFromFile(self, filename):
+        print("Parsing hotkeys config file: " + filename)
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
@@ -177,7 +208,7 @@ class ScriptBuilder(object):
             if command == '[end]':
                 self.key_bindings.append("#IfWinActive")
             elif command.startswith('[') and command.endswith(']'):
-                self.key_bindings.append("\n#IfWinActive ahk_class " + command.replace('[', '').replace(']', ''))
+                self.key_bindings.append("\n#IfWinActive " + getApp(command))
             elif command.startswith('bind'):
                 if len(command.split(' ', 3)) != 4:
                     print("Error! failed to parse line: " + command)
@@ -205,7 +236,7 @@ class ScriptBuilder(object):
     def hotKeyPrintText(self, key, text, pressEnter=False, useKeyDelay=True):
         #TODO check text for empty srt
 #        print("Adding PrintText hotKey on Win+%s button" % key)
-        self.key_bindings.append("\n#%s::" % key)
+        self.key_bindings.append("\n%s::" % parseHotKey(key))
         if useKeyDelay:
             self.key_bindings.append(setKeyDelay(text))
         self.key_bindings.append("SendRaw "+ text)
@@ -216,7 +247,7 @@ class ScriptBuilder(object):
     def hotKeyWrapSelectedText(self, key, textLeft, textRight, pressEnter=False):
 #        print("Adding WrapSelectedText hotKey on Win+%s button" % key)
 #        self.bindKey("#" + key, 'Send, ^{sc02E}%s^{sc02F}%s' % (textLeft, textRight), ret=False)
-        self.key_bindings.append("\n#%s::" % key)
+        self.key_bindings.append("\n%s::" % parseHotKey(key))
         self.key_bindings.append("""
 ClipSaved := ClipboardAll
 Clipboard =
@@ -343,7 +374,7 @@ class Menu(object):
         pass
 
     def assignMenuHotKey(self):
-        self.builder.menu_key_bindings.append("#%s::Menu, %s, Show ; i.e. press the Win-%s hotkey to show the menu.\n" % (self.key, self.name, self.key))
+        self.builder.menu_key_bindings.append("%s::Menu, %s, Show ; i.e. press the Win-%s hotkey to show the menu.\n" % (parseHotKey(self.key), self.name, self.key))
 
     def addMenuSeparator(self):
         self.builder.menu_tree.append("Menu, %s, Add" % self.name)

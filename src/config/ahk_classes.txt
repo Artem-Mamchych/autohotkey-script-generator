@@ -1,0 +1,8 @@
+Console=ConsoleWindowClass
+Putty=PuTTY
+Chrome=Chrome_WidgetWin_0
+TortoiseGit=#32770
+FireFox=MozillaWindowClass
+UnrealCommander=TxUNCOM
+Notepad++=Notepad++
+Skype=tSkMainForm

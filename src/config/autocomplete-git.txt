@@ -1,4 +1,4 @@
-[ConsoleWindowClass]
+[Console]
 git pull
 git pull upstream
 git pull origin
@@ -39,6 +39,13 @@ git ren==git branch -m old new
 git lastcgh==git rev-list -n 1 HEAD -- [file_path] #shows hash of last change of file
 git unrm==git checkout [deleting_commit]^ -- [file_path]
 git deleted==git log --diff-filter=D --summary #get all the commits which have deleted files 
+
+#blame lines==git blame -L 160,+10 Hello.java
+#delete remote branch==git push origin :br
+#uncommit==git reset --soft HEAD~1
+#merge --theirs==git merge upstream --theirs
+#fetch remote br==git fetch origin [remote-branch]:[new-local-branch]
+#checkout remote br==git checkout -b 12.04.0 origin/12.04.0
 
 #git log --oneline --no-merges
 #git --no-pager log -10

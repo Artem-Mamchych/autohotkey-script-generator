@@ -4,7 +4,7 @@ import os.path
 import ahkutils as ahk
 
 description='main automation script for easy generating autohotkey menus, hotkey bindings, text autocomplete and more'
-version = 0.5
+version = 0.6
 config_dir = os.path.join(sys.path[0],"config")
 user_branches = list()
 user_remotes = list()
@@ -16,10 +16,8 @@ def generate():
     builder = ahk.ScriptBuilder()
 #    generateGitShortcutsMenu(builder)
     for file in getFilesByMask(config_dir, "hotkeys", ".txt"):
-        print("Parsing hotkeys config file: " + file)
         builder.addHotKeysFromFile(file)
     for file in getFilesByMask(config_dir, "autocomplete", ".txt"):
-        print("Parsing autocomplete config file: " + file)
         builder.addAutoCompleteFromFile(file)
 
     if os.path.exists("most_useful_autohotkey_scripts.py"):
