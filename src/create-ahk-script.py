@@ -5,7 +5,6 @@ import ahkutils as ahk
 
 description='main automation script for easy generating autohotkey menus, hotkey bindings, text autocomplete and more'
 version = 0.6
-config_dir = os.path.join(sys.path[0],"config")
 user_branches = list()
 user_remotes = list()
 menuItem_id = 0
@@ -14,10 +13,9 @@ def generate():
     print("Generating AHK Script...")
 
     builder = ahk.ScriptBuilder()
-#    generateGitShortcutsMenu(builder)
-    for file in getFilesByMask(config_dir, "hotkeys", ".txt"):
+    for file in getFilesByMask(ahk.config_dir, "hotkeys", ".txt"):
         builder.addHotKeysFromFile(file)
-    for file in getFilesByMask(config_dir, "autocomplete", ".txt"):
+    for file in getFilesByMask(ahk.config_dir, "autocomplete", ".txt"):
         builder.addAutoCompleteFromFile(file)
 
     if os.path.exists("most_useful_autohotkey_scripts.py"):
@@ -25,10 +23,6 @@ def generate():
         top_scripts = commons.CommonScripts(builder)
         if getCliArgument('--invert-wheel'):
             top_scripts.invertMouseScrollWheel()
-        if getCliArgument('--quake-shell'):
-            top_scripts.addQuakeStyleShell()
-#        top_scripts.googleTextFromAnyApp('#g')
-        top_scripts.googleTranslateSelectedText('#t')
 
         autocompl = commons.AutoComplete(builder, user_branches, user_remotes)
         autocompl.insertCurrentDate_Time()
@@ -44,7 +38,7 @@ def getFilesByMask(directory, prefix, extension):
     os.chdir(directory)
     for file in os.listdir("."):
         if file.endswith(extension) and prefix in file:
-            files.append(os.path.join(config_dir, file))
+            files.append(os.path.join(ahk.config_dir, file))
     os.chdir(sys.path[0])
     return files
 

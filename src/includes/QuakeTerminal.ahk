@@ -1,5 +1,4 @@
-; [QuakeTerminal.ahk] Change your hotkey here
-^`::
+;^`:: ;Hotkey commented
 
 DetectHiddenWindows, on
 IfWinExist ahk_class Console_2_Main

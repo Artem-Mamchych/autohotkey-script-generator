@@ -1,11 +1,12 @@
 #autohotkey utils
 import os
+import sys
 from utils import stringutils as su
 application = dict() #This dict contains 'ahk_class' names of applications
 ahk_classes_file = "ahk_classes.txt"
 ahk_classes_file_loaded = None
-
-import sys
+includes_dir = os.path.join(sys.path[0], "includes")
+config_dir = os.path.join(sys.path[0], "config")
 
 def getApp(key):
     key = key.replace('[', '').replace(']', '')
@@ -52,10 +53,12 @@ SetKeyDelay 0
 
 #Reads and returns content of file
 def includeFile(path):
+    if not os.path.isdir(path):
+        path = os.path.join(includes_dir, path)
     if not os.path.exists(path):
         print("File " + path + " not exists!")
         sys.exit()
-
+    print("File %s was inlined!" % os.path.basename(path))
     lines = ""
     file = open(path)
     while 1:
@@ -230,6 +233,10 @@ class ScriptBuilder(object):
                 return
             (textLeft, textRight) = data.split('[SELECTION]')
             self.hotKeyWrapSelectedText(key, textLeft, textRight, pressEnter=False)
+        elif action == 'INCLUDE_FILE':
+            if not key == 'DEFINED_IN_FILE':
+                self.key_bindings.append("\n%s::" % parseHotKey(key))
+            self.key_bindings.append(includeFile(data))
         elif action == 'AHK_CODE':
             error("Not implemented!" + action)
 
