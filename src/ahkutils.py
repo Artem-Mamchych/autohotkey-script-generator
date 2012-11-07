@@ -1,12 +1,15 @@
 #autohotkey utils
 import os
 import sys
+from utils.configfileparser import Parser
+from utils.configfileparser import TOKEN
 from utils import stringutils as su
 application = dict() #This dict contains 'ahk_class' names of applications
 ahk_classes_file = "ahk_classes.txt"
 ahk_classes_file_loaded = None
 includes_dir = os.path.join(sys.path[0], "includes")
-config_dir = os.path.join(sys.path[0], "config")
+config_dir_name = "config"
+config_dir = os.path.join(sys.path[0], config_dir_name)
 
 def getApp(key):
     key = key.replace('[', '').replace(']', '')
@@ -104,20 +107,25 @@ class ScriptBuilder(object):
         self.handlers.append(text)
 
     def addAutoCompleteFromFile(self, filename):
-        print("Parsing autocomplete config file: " + filename)
+        print("[Config] Parsing autocomplete config file: " + Parser.getShortFilePath(filename))
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
+        stopParsing = False
         applicationChosen = None
         autoCompleteAppData = None
         for line in open(filename, "r"):
             command = su.trimComments(line)
             if command:
                 if command.startswith('[') and command.endswith(']'): #Works only for selected application
-                    if applicationChosen:
+                    if Parser.gotIgnoreToken(command, autoCompleteAppData, filename):
+                        stopParsing = True
+                    if applicationChosen and len(autoCompleteAppData) or stopParsing:
                         print("[addAutoCompleteForApp] writing %s entries" % len(autoCompleteAppData))
                         self.addAutoCompleteForApp(application=applicationChosen, data=autoCompleteAppData)
-                    if command == '[end]':
+                        if stopParsing:
+                            break
+                    if command == TOKEN.END:
                         applicationChosen = None
                         continue
 
@@ -200,24 +208,29 @@ class ScriptBuilder(object):
             self.key_bindings.append("Return")
 
     def addHotKeysFromFile(self, filename):
-        print("Parsing hotkeys config file: " + filename)
+        print("[Config] Parsing hotkeys config file: " + Parser.getShortFilePath(filename))
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
+        stopParsing = False
+        addedActions = list()
         for line in open(filename, "r"):
             command = su.trimComments(line)
             if not command:
                 continue
-            if command == '[end]':
+            if command == TOKEN.END:
                 self.key_bindings.append("#IfWinActive")
             elif command.startswith('[') and command.endswith(']'):
+                if Parser.gotIgnoreToken(command, addedActions, filename):
+                    break
                 self.key_bindings.append("\n#IfWinActive " + getApp(command))
-            elif command.startswith('bind'):
+            elif command.startswith(TOKEN.BIND):
                 if len(command.split(' ', 3)) != 4:
                     print("Error! failed to parse line: " + command)
                     continue
                 (bind_token, key, action, data) = command.split(' ', 3)
                 self.setHotKeyAction(key, action, data)
+                addedActions.append(action)
             else:
                 print("[addHotKeysFromFile] Error: Failed to parse string: " + command)
 
@@ -395,6 +408,7 @@ class Menu(object):
 
     @staticmethod
     def createPrintTextMenuFromFile(filename, builder, deleteOnClick=False): #TODO add submenus support
+        print("[Config] Parsing menu config file: " + Parser.getShortFilePath(filename))
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!")
             return
@@ -405,9 +419,9 @@ class Menu(object):
             array.append(line)
             command = su.trimComments(line)
             if command:
-                if 'Hotkey=' in command:
+                if TOKEN.HOTKEY in command:
                     print(command)
-                    hotKey = command.replace('Hotkey=', '')
+                    hotKey = command.replace(TOKEN.HOTKEY, '')
                     menu = Menu(hotKey, hotKey, builder)
                 else:
                     print("line: ")

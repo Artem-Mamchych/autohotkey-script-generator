@@ -1,7 +1,7 @@
 #Common Maven Aliases
 
-[ConsoleWindowClass]
-run==mvn clean jetty:run -Dcom.homeaway.svc.env=stage -Dsvc.env=stage
+[Console]
+run==mvn -o clean jetty:run
 mdep==mvn clean deploy -U -Dmaven.test.skip=true -DskipTests -Dshould.deploy.to.TEST=true
 mcl==mvn -o clean
 mt==mvn -o clean test
@@ -9,11 +9,11 @@ mts==mvn -o clean test -Dmaven.surefire.debug -Dsurefire.useFile=false -Dtest=
 mi==mvn -o clean install
 mit==mvn clean install -Dmaven.test.skip=true
 mjt==mvn -o clean jetty:run -Ddev.env=test
-mcv==mvn -o cobertura:cobertura
+mcov==mvn -o cobertura:cobertura
 mr==mvn dependency:resolve dependency:resolve-plugins
 mdt==mvn dependency:tree > tree
 
-[PuTTY]
+[Putty]
 ver==less pom.xml | grep description -B 6 -A 3
 cls==clear
 free==du -s ./* | sort -nr| cut -f 2-|xargs -i du -sh {}

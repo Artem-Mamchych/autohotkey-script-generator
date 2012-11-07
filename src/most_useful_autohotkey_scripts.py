@@ -34,7 +34,7 @@ class AutoComplete(object):
         if isinstance(builder, ahk.ScriptBuilder):
             self.scriptBuilder = builder
         else:
-            ahk.error("Can't create Menu instance! ScriptBuilder is null!")
+            ahk.error("Can't create CustomAutoComplete instance! ScriptBuilder is null!")
         self.user_branches = user_branches
         self.user_remotes = user_remotes
 
