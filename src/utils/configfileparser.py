@@ -1,7 +1,12 @@
 import os
+import sys
 import ahkutils as ahk
 
 #TODO all config parser code will me moved here
+
+application = dict() #This dict contains 'ahk_class' names of applications
+ahk_classes_file = "ahk_classes.txt"
+ahk_classes_file_loaded = None
 
 #All reserved words used in config files
 class TOKEN(object):
@@ -9,9 +14,40 @@ class TOKEN(object):
     END = '[end]'
     BIND = 'bind'
     HOTKEY = 'Hotkey='
+    HK_PRINT = 'print'
+    HK_PASTE = 'paste'
+    HK_WRAP = 'wrapText'
+    SELECTED_TEXT = '[SELECTION]'
+    HK_INCLUDE_FILE = 'INCLUDE_FILE'
+    HK_DEFINED_IN_FILE = 'DEFINED_IN_FILE'
+
+class Validator(object):
+    @staticmethod
+    def notEmpty(text, caused_by):
+        if not text:
+            ahk.error("[%s] got empty text argument" % caused_by)
+
+    @staticmethod
+    def checkName(text):
+        if "," in text:
+            ahk.error("NamingError: ',' symbol can't be used as name! Invalid name is: %s" % text)
+
+class KeyModifier:
+    Ctrl = "^"
+    Alt = "~"
+    Win = "#"
 
 class Parser(object):
-    file = None
+    @staticmethod
+    def parseHotKey(text):
+        if text.startswith("Ctrl+"):
+            return text.replace("Ctrl+", KeyModifier.Ctrl)
+        elif text.startswith("Alt+"):
+            return text.replace("Alt+", KeyModifier.Alt)
+        elif text.startswith("Win+"):
+            return text.replace("Win+", KeyModifier.Win)
+        else:
+            return KeyModifier.Win + text
 
     @staticmethod
     def gotIgnoreToken(command, collection, filename):
@@ -26,3 +62,26 @@ class Parser(object):
     @staticmethod
     def getShortFilePath(filename):
         return os.path.join(ahk.config_dir_name, os.path.basename(filename))
+
+    @staticmethod
+    def getApp(key):
+        key = key.replace('[', '').replace(']', '')
+        if key.startswith("ahk_"):
+            return key
+        elif key.upper() in application:
+            return 'ahk_class ' + application[key.upper()]
+        else:
+            ahk.error("Application alias '%s' is not defined in file: \n%s"
+                "\nAdd it to file or use 'ahk_class AppClassName' syntax" % (key, ahk_classes_file_loaded))
+
+    @staticmethod
+    def loadApplicationSettings(filename=os.path.join(sys.path[0], "config", ahk_classes_file)):
+        global ahk_classes_file_loaded
+        ahk_classes_file_loaded = filename
+        for line in open(filename, "r"):
+            if line and '=' in line:
+                if len(line.split('=')) != 2:
+                    print("Error! failed to parse ahk_classes.txt line: " + line)
+                    continue
+                (key, app) = line.split('=')
+                application[key.upper()] = app.replace('\n', '')

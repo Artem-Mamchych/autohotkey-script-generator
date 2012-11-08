@@ -26,6 +26,7 @@ git log --oneline --stat
 #git log --no-merges --pretty=format':%s %C(white)' #only messages
 
 git reset --soft HEAD~1
+ggc==git gc --prune --aggressive
 
 g'==git commit -a -m ''
 gl==git log --graph --abbrev-commit --date=relative

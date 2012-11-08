@@ -1,0 +1,24 @@
+[Console]
+sco==svn co -m ""
+sci==svn ci
+ss==svn stat
+ssw==svn switch
+svn copy trunk branches/new #create new branch
+sbr==svn copy trunk branches/new -m "Creating a private branch for" #create new branch and commit it
+svn log
+
+slr==svn log -r 1:10
+s1==svn log -r HEAD #log message for the latest repository commit
+sld==svn log -r {2006-11-20}:{2006-11-29} #logs based on revisions
+svn cleanup
+svn diff
+svn diff -r HEAD #compares your working copy with all of its local changes to the latest version of that tree in the repository
+svn log -r BASE:HEAD #shows all commit logs for the current versioned directory since you last updated
+svn diff -r BASE:HEAD file #compares the unmodified version of <file> with the latest version of <file> in the repository
+svn up
+svn up -r #[revision] Fetching older repository snapshots
+svn add
+svn merge
+svn revert
+svn cat -r 2 rules.txt #Browse a file directly:
+[end]

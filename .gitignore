@@ -34,3 +34,5 @@ pip-log.txt
 /script.ahk
 /src/autocomplete-hints.txt
 /src/experimental
+/src/autohotkey-menu-generator-code.txt
+/src/debug.bat

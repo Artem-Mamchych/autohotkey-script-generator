@@ -2,40 +2,13 @@
 import os
 import sys
 from utils.configfileparser import Parser
+from utils.configfileparser import Validator
 from utils.configfileparser import TOKEN
 from utils import stringutils as su
-application = dict() #This dict contains 'ahk_class' names of applications
-ahk_classes_file = "ahk_classes.txt"
-ahk_classes_file_loaded = None
+
 includes_dir = os.path.join(sys.path[0], "includes")
 config_dir_name = "config"
 config_dir = os.path.join(sys.path[0], config_dir_name)
-
-def getApp(key):
-    key = key.replace('[', '').replace(']', '')
-    if key.startswith("ahk_"):
-        return key
-    elif key.upper() in application:
-        return 'ahk_class ' + application[key.upper()]
-    else:
-        error("Application alias '%s' is not defined in file: \n%s"
-            "\nAdd it to file or use 'ahk_class AppClassName' syntax" % (key, ahk_classes_file_loaded))
-
-def loadApplicationSettings(filename=os.path.join(sys.path[0], "config", ahk_classes_file)):
-    global ahk_classes_file_loaded
-    ahk_classes_file_loaded = filename
-    for line in open(filename, "r"):
-        if line and '=' in line:
-            if len(line.split('=')) != 2:
-                print("Error! failed to parse ahk_classes.txt line: " + line)
-                continue
-            (key, app) = line.split('=')
-            application[key.upper()] = app.replace('\n', '')
-
-class KeyModifier:
-    Ctrl = "^"
-    Alt = "~"
-    Win = "#"
 
 def sendCopy():
     return "Send, ^{vk43} ; Ctrl+C"
@@ -72,16 +45,6 @@ def includeFile(path):
             lines += line
     return lines
 
-def parseHotKey(text):
-    if text.startswith("Ctrl+"):
-        return text.replace("Ctrl+", KeyModifier.Ctrl)
-    elif text.startswith("Alt+"):
-        return text.replace("Alt+", KeyModifier.Alt)
-    elif text.startswith("Win+"):
-        return text.replace("Win+", KeyModifier.Win)
-    else:
-        return KeyModifier.Win + text
-
 #Root object with base methods to build ahk script
 class ScriptBuilder(object):
     ahk_file = None
@@ -98,7 +61,7 @@ class ScriptBuilder(object):
         self.menu_key_bindings = list()
         self.key_bindings = list()
         self.abbreviations = list()
-        loadApplicationSettings()
+        Parser.loadApplicationSettings()
 
     def getFileInstance(self):
         return self.ahk_file
@@ -129,7 +92,7 @@ class ScriptBuilder(object):
                         applicationChosen = None
                         continue
 
-                    applicationChosen = getApp(command)
+                    applicationChosen = Parser.getApp(command)
                     autoCompleteAppData = dict()
                     print("[addAutoCompleteForApp] Section for: " + applicationChosen)
                     continue
@@ -223,7 +186,7 @@ class ScriptBuilder(object):
             elif command.startswith('[') and command.endswith(']'):
                 if Parser.gotIgnoreToken(command, addedActions, filename):
                     break
-                self.key_bindings.append("\n#IfWinActive " + getApp(command))
+                self.key_bindings.append("\n#IfWinActive " + Parser.getApp(command))
             elif command.startswith(TOKEN.BIND):
                 if len(command.split(' ', 3)) != 4:
                     print("Error! failed to parse line: " + command)
@@ -235,28 +198,25 @@ class ScriptBuilder(object):
                 print("[addHotKeysFromFile] Error: Failed to parse string: " + command)
 
     def setHotKeyAction(self, key, action, data):
-        if action == 'print':
+        if action == TOKEN.HK_PRINT:
             self.hotKeyPrintText(key, data, pressEnter=False, useKeyDelay=False)
-        elif action =='paste': #TODO will be implemented later, adding stub now
+        elif action == TOKEN.HK_PASTE: #TODO will be implemented later, adding stub now
             self.hotKeyPrintText(key, data, pressEnter=False, useKeyDelay=False)
-        elif action =='wrapText':
-#            output = data.replace('[SELECTION]', action) #TODO create new implementation with unlimited usages of [SELECTION]
-            if len(data.split('[SELECTION]')) != 2:
-                print("Split [SELECTION] length !=2 when parsing line:" + data)
+        elif action == TOKEN.HK_WRAP:
+#            output = data.replace(TOKEN.SELECTED_TEXT, action) #TODO create new implementation with unlimited usages of [SELECTION]
+            if len(data.split(TOKEN.SELECTED_TEXT)) != 2:
+                print("Split %s length !=2 when parsing line: %s" % (TOKEN.SELECTED_TEXT ,data))
                 return
-            (textLeft, textRight) = data.split('[SELECTION]')
+            (textLeft, textRight) = data.split(TOKEN.SELECTED_TEXT)
             self.hotKeyWrapSelectedText(key, textLeft, textRight, pressEnter=False)
-        elif action == 'INCLUDE_FILE':
-            if not key == 'DEFINED_IN_FILE':
-                self.key_bindings.append("\n%s::" % parseHotKey(key))
+        elif action == TOKEN.HK_INCLUDE_FILE:
+            if not key == TOKEN.HK_DEFINED_IN_FILE:
+                self.key_bindings.append("\n%s::" % Parser.parseHotKey(key))
             self.key_bindings.append(includeFile(data))
-        elif action == 'AHK_CODE':
-            error("Not implemented!" + action)
 
     def hotKeyPrintText(self, key, text, pressEnter=False, useKeyDelay=True):
-        #TODO check text for empty srt
-#        print("Adding PrintText hotKey on Win+%s button" % key)
-        self.key_bindings.append("\n%s::" % parseHotKey(key))
+        Validator.notEmpty(text, "hotKeyPrintText on %s button" % Parser.parseHotKey(key))
+        self.key_bindings.append("\n%s::" % Parser.parseHotKey(key))
         if useKeyDelay:
             self.key_bindings.append(setKeyDelay(text))
         self.key_bindings.append("SendRaw "+ text)
@@ -265,9 +225,9 @@ class ScriptBuilder(object):
         self.key_bindings.append("return")
 
     def hotKeyWrapSelectedText(self, key, textLeft, textRight, pressEnter=False):
-#        print("Adding WrapSelectedText hotKey on Win+%s button" % key)
-#        self.bindKey("#" + key, 'Send, ^{sc02E}%s^{sc02F}%s' % (textLeft, textRight), ret=False)
-        self.key_bindings.append("\n%s::" % parseHotKey(key))
+        Validator.notEmpty(textLeft, "hotKeyWrapSelectedText <textLeft> on %s button" % Parser.parseHotKey(key))
+        Validator.notEmpty(textRight, "hotKeyWrapSelectedText <textRight> on %s button" % Parser.parseHotKey(key))
+        self.key_bindings.append("\n%s::" % Parser.parseHotKey(key))
         self.key_bindings.append("""
 ClipSaved := ClipboardAll
 Clipboard =
@@ -301,6 +261,7 @@ Return
 
     #Uses system clipboard
     def pasteText(self, text, pressEnter=False): #Menu should use own overrided method
+        Validator.notEmpty(text, "pasteText")
         self.write("ClipSaved = %ClipboardAll%")
         self.write('clipboard = ' + text)
 #        self.write("ClipWait")
@@ -311,6 +272,7 @@ Return
     #Simulates text typing
     #TODO printTextHandler has issue with losing focus of input, so it is not suitable for popup menus
     def printTextHandler(self, text, pressEnter=False):
+        Validator.notEmpty(text, "printTextHandler")
         self.handlers.append(setKeyDelay(text))
         self.handlers.append("SendRaw "+ text)
         if pressEnter:
@@ -350,10 +312,6 @@ return
 #IfWinActive
 """)
 
-def checkName(text):
-    if "," in text:
-        error(exit=False, message="NamingError: ',' symbol can't be used as name! Invalid name is: %s" % text)
-
 class Menu(object):
     name = None
     key = None
@@ -370,9 +328,10 @@ class Menu(object):
 
     #Overrides
     def pasteText(self, text, pressEnter=False):
-        pass
+        error("[Menu.pasteText] NOT IMPLEMENTED!")
 
     def pasteTextHandler(self, text, sendPaste=False, clipSave=False, beforeReturn=False):
+        Validator.notEmpty(text, "Menu.pasteTextHandler")
         if clipSave:
             self.builder.handlers.append("clipboard = %ClipSaved%")
     #    handlers.append("ClipWait")
@@ -391,10 +350,10 @@ class Menu(object):
 
     #Overrides
     def printTextHandler(self, text, pressEnter=False):
-        pass
+        error("[Menu.printTextHandler] NOT IMPLEMENTED!")
 
     def assignMenuHotKey(self):
-        self.builder.menu_key_bindings.append("%s::Menu, %s, Show ; i.e. press the Win-%s hotkey to show the menu.\n" % (parseHotKey(self.key), self.name, self.key))
+        self.builder.menu_key_bindings.append("%s::Menu, %s, Show ; i.e. press the Win-%s hotkey to show the menu.\n" % (Parser.parseHotKey(self.key), self.name, self.key))
 
     def addMenuSeparator(self):
         self.builder.menu_tree.append("Menu, %s, Add" % self.name)
@@ -403,7 +362,7 @@ class Menu(object):
         return 'Menu "%s" binded on: %s' % (self.name, self.key)
 
     def addSiteBookmark(self, itemName):
-        checkName(itemName)
+        Validator.checkName(itemName)
         self.builder.write("Menu, %s, Add, %s, OpenInBrowserMenuHandler" % (self.name, itemName))
 
     @staticmethod
@@ -432,10 +391,10 @@ class Menu(object):
 
     #Use to type some text
     def addPrintText(self, itemName, text, deleteOnClick=False):
+        Validator.notEmpty(text, "addPrintText for itemName %s " % itemName)
         itemName = itemName.replace(",", "")
-        checkName(itemName)
-#        return 'Menu "%s" binded on: %s' % (self.name, self.key)
-        print("Adding PrintText %s" % text)
+        Validator.checkName(itemName)
+        print("[PrintText] %s" % text)
         handler = self.createHandlerId()
         self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (self.name, itemName, handler))
         self.builder.handlers.append(handler + ":")
@@ -446,8 +405,9 @@ class Menu(object):
 
     #Use to save to clipboard some text
     def addPasteText(self, itemName, text):
-        checkName(itemName)
-        print("Adding PasteText %s" % text)
+        Validator.notEmpty(text, "addPasteText for itemName %s " % itemName)
+        Validator.checkName(itemName)
+        print("[PasteText] %s" % text)
         handler = self.createHandlerId()
         self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (self.name, itemName, handler))
         self.builder.handlers.append(handler + ":")
@@ -475,8 +435,7 @@ def abbreviate(text):
 def error(message):
     print("\nERROR OCCURRED DURING GENERATING SCRIPT. Error message:")
     print(message)
-    if exit:
-        sys.exit(1)
+    sys.exit(1)
 
 #Paste text from clipboard
 def pasteTextCode():
