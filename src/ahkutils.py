@@ -72,7 +72,7 @@ class ScriptBuilder(object):
     def addAutoCompleteFromFile(self, filename):
         print("[Config] Parsing autocomplete config file: " + Parser.getShortFilePath(filename))
         if not os.path.exists(filename) or not os.path.isfile(filename):
-            print("Error! %s file are not exists!")
+            print("Error! %s file are not exists!" % filename)
             return
         stopParsing = False
         applicationChosen = None
@@ -173,7 +173,7 @@ class ScriptBuilder(object):
     def addHotKeysFromFile(self, filename):
         print("[Config] Parsing hotkeys config file: " + Parser.getShortFilePath(filename))
         if not os.path.exists(filename) or not os.path.isfile(filename):
-            print("Error! %s file are not exists!")
+            print("Error! %s file are not exists!" % filename)
             return
         stopParsing = False
         addedActions = list()
@@ -353,6 +353,7 @@ class Menu(object):
         error("[Menu.printTextHandler] NOT IMPLEMENTED!")
 
     def assignMenuHotKey(self):
+        self.builder.menu_tree.append("return  ; End of menu tree definition section.")
         self.builder.menu_key_bindings.append("%s::Menu, %s, Show ; i.e. press the Win-%s hotkey to show the menu.\n" % (Parser.parseHotKey(self.key), self.name, self.key))
 
     def addMenuSeparator(self):
@@ -369,34 +370,49 @@ class Menu(object):
     def createPrintTextMenuFromFile(filename, builder, deleteOnClick=False): #TODO add submenus support
         print("[Config] Parsing menu config file: " + Parser.getShortFilePath(filename))
         if not os.path.exists(filename) or not os.path.isfile(filename):
-            print("Error! %s file are not exists!")
+            print("Error! %s file are not exists!" % filename)
             return
 
-        array = []
         menu = None
-        for line in open(filename, "r"):
-            array.append(line)
-            command = su.trimComments(line)
-            if command:
-                if TOKEN.HOTKEY in command:
-                    print(command)
-                    hotKey = command.replace(TOKEN.HOTKEY, '')
-                    menu = Menu(hotKey, hotKey, builder)
-                else:
-                    print("line: ")
-                    print(command)
-                    menu.addPrintText(command, command, deleteOnClick) #label, text
+        import json
+        data = json.loads(Parser.readFileAsString(filename))
+        if not len(data['MenuItems']):
+            error("Invalid JSON file [%s] MenuItems dictionary is empty or invalid!" % filename)
+
+        if data['MenuSettings'] and data['MenuSettings']['Hotkey']:
+            hotKey = data['MenuSettings']['Hotkey']
+            menu = Menu(hotKey, hotKey, builder)
+        else:
+            error("Invalid JSON file [%s] MenuSettings.Hotkey value is not provided!" % filename)
+
+        for key, subMenu in data['MenuItems'].iteritems():
+            if key == 'MenuSettings':
+                continue
+            if isinstance(subMenu, list):
+                for item in subMenu:
+                    if isinstance(item, unicode):
+                        subMenuName=None
+                        if key:
+                            subMenuName=key
+                        menu.addPrintText(item, item, subMenuName=subMenuName, deleteOnClick=deleteOnClick) #label, text
+                menu.attachSubMenu(hotKey, subMenuName, subMenuName)
         if menu:
             menu.assignMenuHotKey()
 
+    def attachSubMenu(self, rootMenuName, subMenuName, subMenuObj):
+        if subMenuName and subMenuObj:
+            self.builder.menu_tree.append("Menu, %s, Add, %s, :%s" % (rootMenuName, subMenuName, subMenuObj))
+
     #Use to type some text
-    def addPrintText(self, itemName, text, deleteOnClick=False):
+    def addPrintText(self, itemName, text, subMenuName=None, deleteOnClick=False):
         Validator.notEmpty(text, "addPrintText for itemName %s " % itemName)
         itemName = itemName.replace(",", "")
         Validator.checkName(itemName)
         print("[PrintText] %s" % text)
         handler = self.createHandlerId()
-        self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (self.name, itemName, handler))
+        if not subMenuName:
+            subMenuName=self.name
+        self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (subMenuName, itemName, handler))
         self.builder.handlers.append(handler + ":")
         beforeReturn = ""
         if deleteOnClick:

@@ -1,0 +1,9 @@
+{"MenuSettings":{
+    "Hotkey":"Win+q",
+    "mode":"print"
+},
+"MenuItems":{
+    "": ["RootMenuItem1", "RootMenuItem2"],
+    "SubMenuName": ["SubMenuItem3", "SubMenuItem4"]
+}
+}

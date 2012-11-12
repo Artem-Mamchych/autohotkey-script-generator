@@ -38,6 +38,12 @@ class KeyModifier:
     Win = "#"
 
 class Parser(object):
+
+    @staticmethod
+    def readFileAsString(filename):
+        file = open(filename, 'r')
+        return file.read()
+
     @staticmethod
     def parseHotKey(text):
         if text.startswith("Ctrl+"):
