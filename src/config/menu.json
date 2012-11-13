@@ -1,9 +1,10 @@
 {"MenuSettings":{
     "Hotkey":"Win+q",
-    "mode":"print"
+    "mode":"print",
+    "deleteOnClick":"false"
 },
 "MenuItems":{
-    "": ["RootMenuItem1", "RootMenuItem2"],
+    "": {"RootMenuItem1":"1", "RootMenuItem2":"2"},
     "SubMenuName": ["SubMenuItem3", "SubMenuItem4"]
 }
 }

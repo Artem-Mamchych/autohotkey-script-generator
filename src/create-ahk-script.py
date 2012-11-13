@@ -17,6 +17,8 @@ def generate():
         builder.addHotKeysFromFile(file)
     for file in getFilesByMask(ahk.config_dir, "autocomplete", ".txt"):
         builder.addAutoCompleteFromFile(file)
+    for file in menu_files:
+        ahk.Menu.createPrintTextMenuFromFile(os.path.join(ahk.config_dir_name, file), builder)
 
     if os.path.exists("most_useful_autohotkey_scripts.py"):
         import most_useful_autohotkey_scripts as commons

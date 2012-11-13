@@ -367,13 +367,15 @@ class Menu(object):
         self.builder.write("Menu, %s, Add, %s, OpenInBrowserMenuHandler" % (self.name, itemName))
 
     @staticmethod
-    def createPrintTextMenuFromFile(filename, builder, deleteOnClick=False): #TODO add submenus support
+    def createPrintTextMenuFromFile(filename, builder):
         print("[Config] Parsing menu config file: " + Parser.getShortFilePath(filename))
         if not os.path.exists(filename) or not os.path.isfile(filename):
             print("Error! %s file are not exists!" % filename)
             return
 
         menu = None
+        deleteOnClick = False
+        method = None
         import json
         data = json.loads(Parser.readFileAsString(filename))
         if not len(data['MenuItems']):
@@ -385,17 +387,31 @@ class Menu(object):
         else:
             error("Invalid JSON file [%s] MenuSettings.Hotkey value is not provided!" % filename)
 
+        if data['MenuSettings']['deleteOnClick'] == 'true':
+            deleteOnClick = True
+        elif data['MenuSettings']['deleteOnClick'] == 'false':
+            deleteOnClick = False
+        else:
+            error("Invalid JSON file [%s] MenuSettings.deleteOnClick value is not provided!")
+
+        if data['MenuSettings']['mode'] == 'print':
+            method = menu.addPrintText
+        elif data['MenuSettings']['mode'] == 'clipboard':
+            method = menu.addPasteText
+        else:
+            error("Invalid JSON file [%s] MenuSettings.mode value is not provided!")
+
         for key, subMenu in data['MenuItems'].iteritems():
             if key == 'MenuSettings':
                 continue
+            if isinstance(subMenu, dict):
+                for itemName, itemValue in subMenu.iteritems():
+                    method(itemName, itemValue, subMenuName=key, deleteOnClick=deleteOnClick)
+                menu.attachSubMenu(hotKey, key, key)
             if isinstance(subMenu, list):
                 for item in subMenu:
-                    if isinstance(item, unicode):
-                        subMenuName=None
-                        if key:
-                            subMenuName=key
-                        menu.addPrintText(item, item, subMenuName=subMenuName, deleteOnClick=deleteOnClick) #label, text
-                menu.attachSubMenu(hotKey, subMenuName, subMenuName)
+                    method(item, item, subMenuName=key, deleteOnClick=deleteOnClick)
+                menu.attachSubMenu(hotKey, key, key)
         if menu:
             menu.assignMenuHotKey()
 
@@ -416,16 +432,18 @@ class Menu(object):
         self.builder.handlers.append(handler + ":")
         beforeReturn = ""
         if deleteOnClick:
-            beforeReturn="Menu, %s, delete, %s" % (self.name, itemName)
+            beforeReturn="Menu, %s, delete, %s" % (subMenuName, itemName)
         self.pasteTextHandler(text, sendPaste=True, clipSave=True, beforeReturn=beforeReturn)
 
     #Use to save to clipboard some text
-    def addPasteText(self, itemName, text):
+    def addPasteText(self, itemName, text, subMenuName=None, deleteOnClick=False):
         Validator.notEmpty(text, "addPasteText for itemName %s " % itemName)
         Validator.checkName(itemName)
         print("[PasteText] %s" % text)
         handler = self.createHandlerId()
-        self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (self.name, itemName, handler))
+        if not subMenuName:
+            subMenuName=self.name
+        self.builder.menu_tree.append("Menu, %s, Add, %s, %s" % (subMenuName, itemName, handler))
         self.builder.handlers.append(handler + ":")
         self.pasteTextHandler(text, sendPaste=False, clipSave=False)
 
