@@ -1,6 +1,7 @@
 import os
 import sys
 import ahkutils as ahk
+import codecs
 
 #TODO all config parser code will me moved here
 
@@ -38,10 +39,26 @@ class KeyModifier:
     Win = "#"
 
 class Parser(object):
+    @staticmethod
+    def getCliArgument(name):
+        if '=' not in name:
+            if name in sys.argv:
+                return True
+            else:
+                return False
+        else:
+            output = ""
+            #Return list of param=values, [...,]
+            for arg in sys.argv:
+                if arg.startswith(name):
+                    if arg.replace(name,''):
+                        output = arg.replace(name,'').split(',')
+                    break
+            return output
 
     @staticmethod
     def readFileAsString(filename):
-        file = open(filename, 'r')
+        file = codecs.open(filename, "r", "mbcs")
         return file.read()
 
     @staticmethod
@@ -64,6 +81,17 @@ class Parser(object):
             else:
                 print("[Config] File %s is ignored" % os.path.basename(filename))
                 return True
+
+    @staticmethod
+    def filterMenuItemName(name):
+        """Removes/escapes invalid characters for menu item name"""
+        if not name:
+            return None
+        name = name.replace(",", "")
+        if Parser.getCliArgument('--translit'):
+            import trans
+            name = name.encode('trans')
+        return name
 
     @staticmethod
     def getShortFilePath(filename):

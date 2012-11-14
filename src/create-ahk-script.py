@@ -2,6 +2,7 @@
 import sys
 import os.path
 import ahkutils as ahk
+from utils.configfileparser import Parser
 
 description='main automation script for easy generating autohotkey menus, hotkey bindings, text autocomplete and more'
 version = 0.6
@@ -23,7 +24,7 @@ def generate():
     if os.path.exists("most_useful_autohotkey_scripts.py"):
         import most_useful_autohotkey_scripts as commons
         top_scripts = commons.CommonScripts(builder)
-        if getCliArgument('--invert-wheel'):
+        if Parser.getCliArgument('--invert-wheel'):
             top_scripts.invertMouseScrollWheel()
 
         autocompl = commons.AutoComplete(builder, user_branches, user_remotes)
@@ -44,25 +45,9 @@ def getFilesByMask(directory, prefix, extension):
     os.chdir(sys.path[0])
     return files
 
-def getCliArgument(name):
-    if '=' not in name:
-        if name in sys.argv:
-            return True
-        else:
-            return False
-    else:
-        output = ""
-        #Return list of param=values, [...,]
-        for arg in sys.argv:
-            if arg.startswith(name):
-                if arg.replace(name,''):
-                    output = arg.replace(name,'').split(',')
-                break
-        return output
-
 if __name__ == "__main__":
     #List type (--branches=master,develop,experimental) command line arguments are fetched here
-    user_branches = getCliArgument('--branches=')
-    user_remotes = getCliArgument('--remotes=')
-    menu_files = getCliArgument('--menufiles=')
+    user_branches = Parser.getCliArgument('--branches=')
+    user_remotes = Parser.getCliArgument('--remotes=')
+    menu_files = Parser.getCliArgument('--menufiles=')
     generate()
