@@ -43,7 +43,7 @@ git deleted==git log --diff-filter=D --summary #get all the commits which have d
 
 #blame lines==git blame -L 160,+10 Hello.java
 #delete remote branch==git push origin :br
-#uncommit==git reset --soft HEAD~1
+git unc==git reset --soft HEAD~1
 #merge --theirs==git merge upstream --theirs
 #fetch remote br==git fetch origin [remote-branch]:[new-local-branch]
 #checkout remote br==git checkout -b 12.04.0 origin/12.04.0

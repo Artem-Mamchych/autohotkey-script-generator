@@ -1,6 +1,6 @@
 [Console]
-sco==svn co -m ""
-sci==svn ci
+sco==svn co
+sci==svn ci -m ""
 ss==svn stat
 ssw==svn switch
 svn copy trunk branches/new #create new branch

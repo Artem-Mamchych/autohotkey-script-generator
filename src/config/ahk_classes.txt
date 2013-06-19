@@ -6,3 +6,4 @@ FireFox=MozillaWindowClass
 UnrealCommander=TxUNCOM
 Notepad++=Notepad++
 Skype=tSkMainForm
+NortelVPN=WindowsForms10.Window.8.app.0.33c0d9d
