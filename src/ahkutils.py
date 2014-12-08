@@ -338,10 +338,12 @@ class Menu(object):
             self.builder.handlers.append("clipboard = %ClipSaved%")
     #    handlers.append("ClipWait")
         self.builder.handlers.append('clipboard = ' + text)
+        #.replace('$', "`$").replace('%', "`%")
     #    handlers.append("ClipWait")
     #    handlers.append("Sleep, 1")
         if sendPaste:
             self.builder.handlers.append(pasteTextCode())
+        # self.builder.handlers.append("sleep 100")
         if beforeReturn:
             self.builder.handlers.append(beforeReturn)
         if clipSave:
@@ -377,6 +379,7 @@ class Menu(object):
 
         menu = None
         deleteOnClick = False
+        clipSave = True
         method = None
         import json
         data = json.loads(Parser.readFileAsString(filename))
@@ -389,6 +392,11 @@ class Menu(object):
         else:
             error("Invalid JSON file [%s] MenuSettings.Hotkey value is not provided!" % filename)
 
+        if data['MenuSettings']['clipSave'] == 'false':
+            clipSave = False
+        elif data['MenuSettings']['clipSave'] == 'true':
+            clipSave = True
+
         if data['MenuSettings']['deleteOnClick'] == 'true':
             deleteOnClick = True
         elif data['MenuSettings']['deleteOnClick'] == 'false':
@@ -398,7 +406,7 @@ class Menu(object):
 
         if data['MenuSettings']['mode'] == 'print':
             method = menu.addPrintText
-        elif data['MenuSettings']['mode'] == 'clipboard':
+        elif data['MenuSettings']['mode'] == 'clipboard' or data['MenuSettings']['mode'] == 'paste':
             method = menu.addPasteText
         else:
             error("Invalid JSON file [%s] MenuSettings.mode value is not provided!")
@@ -408,24 +416,32 @@ class Menu(object):
                 continue
             if isinstance(subMenu, dict):
                 for itemName, itemValue in subMenu.iteritems():
-                    method(itemName, itemValue, subMenuName=key, deleteOnClick=deleteOnClick)
+                    method(itemName, itemValue, subMenuName=key, deleteOnClick=deleteOnClick, clipSave=clipSave)
                 menu.attachSubMenu(hotKey, key, key)
             if isinstance(subMenu, list):
                 for item in subMenu:
-                    method(item, item, subMenuName=key, deleteOnClick=deleteOnClick)
+                    #If got empty json element ("",) - skip it
+                    if not item:
+                        continue
+                    itemName = item
+                    if len(item) > 80:
+                        itemName = item[:80]
+                    method(itemName, item, subMenuName=key, deleteOnClick=deleteOnClick, clipSave=clipSave)
                 menu.attachSubMenu(hotKey, key, key)
         if menu:
             menu.assignMenuHotKey()
 
     def attachSubMenu(self, rootMenuName, subMenuName, subMenuObj):
         if subMenuName and subMenuObj:
+            if len(subMenuName) >= 30:
+                subMenuName = subMenuName[:30]
             self.builder.menu_tree.append("Menu, %s, Add, %s, :%s" % (rootMenuName, subMenuName, subMenuObj))
 
     #Use to type some text
-    def addPrintText(self, itemName, text, subMenuName=None, deleteOnClick=False):
+    def addPrintText(self, itemName, text, subMenuName=None, deleteOnClick=False, clipSave=True):
         Validator.notEmpty(text, "addPrintText for itemName %s " % itemName)
         itemName = Parser.filterMenuItemName(itemName)
-        print("[PrintText] %s" % text)
+#        print("[PrintText] %s" % text)
         handler = self.createHandlerId()
         if not subMenuName:
             subMenuName=self.name
@@ -434,10 +450,10 @@ class Menu(object):
         beforeReturn = ""
         if deleteOnClick:
             beforeReturn="Menu, %s, delete, %s" % (subMenuName, itemName)
-        self.pasteTextHandler(text, sendPaste=True, clipSave=True, beforeReturn=beforeReturn)
+        self.pasteTextHandler(text, sendPaste=True, clipSave=clipSave, beforeReturn=beforeReturn)
 
     #Use to save to clipboard some text
-    def addPasteText(self, itemName, text, subMenuName=None, deleteOnClick=False):
+    def addPasteText(self, itemName, text, subMenuName=None, deleteOnClick=False, clipSave=True):
         Validator.notEmpty(text, "addPasteText for itemName %s " % itemName)
         itemName = Parser.filterMenuItemName(itemName)
         print("[PasteText] %s" % text)
@@ -474,4 +490,5 @@ def error(message):
 
 #Paste text from clipboard
 def pasteTextCode():
-    return """SendInput {Raw}%clipboard%"""
+    return """Send, ^v""" #Not works on non-english keyboard layouts!
+    #TODO try return """SendInput {Raw}%clipboard%"""

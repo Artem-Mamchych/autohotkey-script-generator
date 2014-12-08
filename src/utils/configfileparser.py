@@ -35,8 +35,9 @@ class Validator(object):
 
 class KeyModifier:
     Ctrl = "^"
-    Alt = "~"
+    Alt = "!"
     Win = "#"
+    Shift = "+"
 
 class Parser(object):
     @staticmethod
