@@ -1,0 +1,10 @@
+#[Chrome]
+#Wrap text example
+#self.scriptBuilder.bindKey("^sc030Send, ^{sc02E}<b>^{sc02F}</b>", ret=False)
+#.val==$('#').val(); #TODO needs escaping!!!
+#.html==$('#').html();
+#.ex==$('#').length;
+#.clk==$('#form-submit:first').trigger('click');
+#.chk==$('#').attr('checked', true);
+#.dd==$('# option:last').attr('selected', 'selected');
+#[end]

@@ -1,15 +1,17 @@
 #Syntax:
 #bind [key] [print|paste|wrapText|INCLUDE_FILE] [text/code]
 
+bind DEFINED_IN_FILE INCLUDE_FILE mediaKeys.ahk
 bind Ctrl+` INCLUDE_FILE QuakeTerminal.ahk #It requires installing of additional software. See: http://tech.xster.net/tips/quake-style-drop-down-terminal-for-windows/
-bind Win+t INCLUDE_FILE googleTranslateSelectedText.ahk
-bind Win+g INCLUDE_FILE googleSelectedText.ahk #Google text from any app
+#bind Win+t INCLUDE_FILE googleTranslateSelectedText.ahk
+#bind Win+g INCLUDE_FILE googleSelectedText.ahk #Google text from any app
 bind DEFINED_IN_FILE INCLUDE_FILE openShell.ahk #Opens shell in current directory of Unreal Commander
+#bind DEFINED_IN_FILE INCLUDE_FILE puttyExtensions.ahk
+bind DEFINED_IN_FILE INCLUDE_FILE mouseScrollingFilter.ahk
 
-[FireFox]
-bind Win+0 print This text will be printed
-bind Win+n wrapText $("input[name=[SELECTION]]").val();
-#bind Win+i wrapText $("#[SELECTION]").val(); #TODO: choose another comment symbol!
-bind Win+c wrapText $(".[SELECTION]").val();
+#bind Win+2 print livedemo
+
+#[Putty]
+#bind Ctrl+v print livedemo #Implemented in puttyExtensions.ahk 
 
 [end]

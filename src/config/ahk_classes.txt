@@ -1,4 +1,5 @@
 Console=ConsoleWindowClass
+Console2=Console_2_Main
 Putty=PuTTY
 Chrome=Chrome_WidgetWin_0
 TortoiseGit=#32770

@@ -1,0 +1,9 @@
+#[FireFox]
+#bind Win+1 print name="productId"
+#bind Win+2 print id="product_name_
+#bind Win+z print document.getElementsByTagName("body");
+#bind Win+0 print This text will be printed
+#bind Win+n wrapText $("input[name=[SELECTION]]").val();
+#bind Win+i wrapText $("#[SELECTION]").val(); #TODO: choose another comment symbol!
+#bind Win+c wrapText $(".[SELECTION]").val();
+#[end]

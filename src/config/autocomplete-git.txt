@@ -1,22 +1,37 @@
-[Console]
+[Console2]
 git pull
+gpr==git pull --rebase
 git pull upstream
-git pull origin
+gpo==git pull origin --rebase
 git fetch origin
 git status
 git stash save
+git stash save --include-untracked
 git stash pop
 git stash list
 git checkout
+git checkout -b #Switch to a new <branch>
 git rebase
 git rebase --continue
 git rebase --skip
 git rebase --abort
 git branch
+git merge
 git reset --hard HEAD
 git add --interactive #provides a menu for adding, updating, reverting, and more
+git fetch -p #remove all your local branches which are remotely deleted
+stab==git tag -f stable
 
-git checkout -b #Switched to a new branch "rack"
+#HMS
+wsrc==cd /D C:\.src\dmgweb\
+dsrc==cd /D C:\.src\domain\
+#git checkout feature/
+git checkout dev
+#git branch feature/
+git rebase dev
+git del==git push origin :dmg-PL-
+#HMS
+
 git log -p
 git log --author=gordon@vrbo.com #shows me my commits
 git fetch upstream; git diff upstream/master
@@ -26,10 +41,10 @@ git log --oneline --stat
 #git log --no-merges --pretty=format':%s %C(white)' #only messages
 
 git reset --soft HEAD~1
-ggc==git gc --prune --aggressive
+git gc==git gc --prune --aggressive
 
-g'==git commit -a -m ''
-gl==git log --graph --abbrev-commit --date=relative
+g'==git commit -a -m ""
+gl==git log --graph --pretty=oneline --abbrev-commit -15 
 #TODO: ahk escape % | AutoHotkey's default escape character is accent/backtick (`)
 gll==git log --graph --pretty=format':`%C(yellow)`%h`%C(red)`%d`%Creset `%s `%C(white) `%an, `%ar`%Creset'
 g1==git log -p HEAD~..HEAD
@@ -52,4 +67,31 @@ git unc==git reset --soft HEAD~1
 #git --no-pager log -10
 #git log upstream..HEAD
 #git log --grep='DE12345'
+
+[Console]
+gp==git pull
+gpr==git pull --rebase
+gpu==git pull upstream
+gs==git status
+gss==git stash save
+gsp==git stash pop
+gc==git checkout
+gcb==git checkout -b #Switch to a new <branch>
+gr==git rebase
+grc==git rebase --continue
+grs==git rebase --skip
+gra==git rebase --abort
+gb==git branch
+gm==git merge
+grhh==git reset --hard HEAD
+gcd==git checkout dev
+grd==git rebase dev
+git del==git push origin :dmg-PL-
+gl==git log --graph --pretty=oneline --abbrev-commit -15
+g1==git log -p HEAD~..HEAD
+gchk==git fsck --full --strict --unreachable
+git cp==git cherry-pick
+git unc==git reset --soft HEAD~1
+git ren==git branch -m old new
+
 [end]
